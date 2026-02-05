@@ -48,19 +48,15 @@ public class E2eTests : IAsyncLifetime
         _output.WriteLine($"Testing file conversion with file: {filePath}");
 
         // Act
-        var response = await _client!.ConvertAsync(filePath);
+        var markdown = await _client!.ConvertAsync(filePath);
 
         // Assert
-        Assert.NotNull(response);
+        Assert.NotNull(markdown);
+        Assert.True(markdown.Length > 0, "Markdown content should not be empty");
         _output.WriteLine($@"Response received: 
-            Text length={response.Text?.Length ?? 0},
-            Title={response.Title},
-            Metadata keys={response.Metadata?.Count ?? 0},
-            Text content={response.Text}
+            Markdown length={markdown.Length},
+            Content preview={markdown.Substring(0, Math.Min(100, markdown.Length))}
         ");
-
-        Assert.NotNull(response.Text);
-        Assert.NotEmpty(response.Text);
     }
 
     private async Task StartServerAsync()
