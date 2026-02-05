@@ -15,7 +15,7 @@ public class E2eTests : IAsyncLifetime
 
     private const string ServerUrl = "http://localhost:8000";
     private const string HealthEndpoint = "/health";
-    private const string TestPdfFileName = "pdf-test.pdf";
+    private static readonly string[] TestFileNames = { "pdf-test.pdf", "tst-text.txt" };
     private const int ServerPort = 8000;
     private const int MaxRetries = 30;
 
@@ -37,22 +37,24 @@ public class E2eTests : IAsyncLifetime
         _httpClient?.Dispose();
     }
 
-    [Fact]
-    public async Task UploadPdfAndVerifyMarkdown()
+    [Theory]
+    [InlineData("pdf-test.pdf")]
+    [InlineData("tst-text.txt")]
+    public async Task UploadFileAndVerifyMarkdown(string fileName)
     {
         // Arrange
-        var pdfPath = Path.Combine(AppContext.BaseDirectory, TestPdfFileName);
-        Assert.True(File.Exists(pdfPath), $"Test PDF file not found: {pdfPath}");
+        var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
+        Assert.True(File.Exists(filePath), $"Test file not found: {filePath}");
 
-        _output.WriteLine($"Testing PDF conversion with file: {pdfPath}");
+        _output.WriteLine($"Testing file conversion with file: {filePath}");
 
         // Act
-        var response = await _client!.ConvertAsync(pdfPath);
+        var response = await _client!.ConvertAsync(filePath);
 
         // Assert
         Assert.NotNull(response);
         _output.WriteLine($"Response received: Filename={response.Filename}, Markdown length={response.Markdown?.Length ?? 0}");
-        Assert.Equal(TestPdfFileName, response.Filename);
+        Assert.Equal(fileName, response.Filename);
         Assert.NotNull(response.Markdown);
         Assert.NotEmpty(response.Markdown);
     }
