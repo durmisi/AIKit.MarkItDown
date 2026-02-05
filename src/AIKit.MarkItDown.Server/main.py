@@ -23,7 +23,7 @@ md = MarkItDown()
 
 @app.get("/", tags=["General"])
 async def root():
-    return {"message": "Hello from FastAPI in Aspire"}
+    return {"message": "Hello from the MarkItDown Server!"}
 
 @app.get("/health", tags=["Health"])
 async def health():

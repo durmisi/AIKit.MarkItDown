@@ -19,7 +19,7 @@ public class E2eTests
     public async Task UploadPdfAndVerifyMarkdown()
     {
         // Start the FastAPI server manually
-        var apiDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AIKit.MarkItDown.Api");
+        var apiDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AIKit.MarkItDown.Server");
         _uvicornProcess = StartUvicornServer(apiDir);
         
         try
