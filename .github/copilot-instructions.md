@@ -1,6 +1,4 @@
-# AIKit.MarkItDown Copilot Instructions
-
-## Project Overview
+# Project Overview
 
 AIKit.MarkItDown is a C# wrapper around the Python `markitdown` library for converting various file formats (PDF, DOCX, etc.) to Markdown. It uses pythonnet to embed Python runtime in .NET.
 
