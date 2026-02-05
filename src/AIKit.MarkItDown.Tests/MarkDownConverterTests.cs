@@ -1,6 +1,4 @@
-﻿using AIKit.MarkItDown;
-using Xunit.Abstractions;
-using System.IO;
+﻿using Xunit.Abstractions;
 
 namespace AIKit.MarkItDown.Tests;
 
@@ -25,13 +23,12 @@ public class MarkDownConverterTests
 
         var result = converter.Convert(filePath);
 
-        _output.WriteLine($"Conversion result length: {result.Text.Length}");
-        _output.WriteLine(result.Text);
+        _output.WriteLine($"Conversion result length: {result.Length}");
+        _output.WriteLine(result);
 
         Assert.NotNull(result);
-        Assert.NotNull(result.Text);
-        Assert.NotEmpty(result.Text);
-        // Add more assertions based on expected Markdown content, e.g., Assert.Contains("#", result.Text);
+        Assert.NotEmpty(result);
+        // Add more assertions based on expected Markdown content, e.g., Assert.Contains("#", result);
     }
 
     [Theory]
@@ -47,12 +44,11 @@ public class MarkDownConverterTests
 
         var result = converter.Convert(filePath, config);
 
-        _output.WriteLine($"Conversion result length: {result.Text.Length}");
-        _output.WriteLine(result.Text);
+        _output.WriteLine($"Conversion result length: {result.Length}");
+        _output.WriteLine(result);
 
         Assert.NotNull(result);
-        Assert.NotNull(result.Text);
-        Assert.NotEmpty(result.Text);
+        Assert.NotEmpty(result);
     }
 
     [Fact]
@@ -63,11 +59,11 @@ public class MarkDownConverterTests
         var nonExistentFile = "nonexistent.pdf";
         _output.WriteLine($"Attempting to convert non-existent file: {nonExistentFile}");
 
-        var exception = Assert.Throws<Exception>(() => converter.Convert(nonExistentFile));
+        var exception = Assert.Throws<MarkItDownConversionException>(() => converter.Convert(nonExistentFile));
         _output.WriteLine($"Exception type: {exception.GetType().Name}");
         _output.WriteLine($"Exception message: {exception.Message}");
         // The exception could be from installation failure or conversion failure
-        Assert.True(exception.Message.Contains("Failed to install") || exception.Message.Contains("MarkItDown conversion failed"));
+        Assert.Contains("File not found", exception.Message);
     }
 
     [Theory]
@@ -85,12 +81,11 @@ public class MarkDownConverterTests
         {
             var result = converter.Convert(stream, extension);
 
-            _output.WriteLine($"Conversion result length: {result.Text.Length}");
-            _output.WriteLine(result.Text);
+            _output.WriteLine($"Conversion result length: {result.Length}");
+            _output.WriteLine(result);
 
             Assert.NotNull(result);
-            Assert.NotNull(result.Text);
-            Assert.NotEmpty(result.Text);
+            Assert.NotEmpty(result);
         }
     }
 
@@ -110,11 +105,11 @@ public class MarkDownConverterTests
             Assert.NotNull(result);
             // Assert.NotNull(result.Text); // May be empty for non-convertible URLs
         }
-        catch (Exception ex)
+        catch (MarkItDownConversionException ex)
         {
             _output.WriteLine($"URI conversion failed as expected: {ex.Message}");
             // Assert that it's a conversion failure, not a method error
-            Assert.Contains("MarkItDown conversion failed", ex.Message);
+            Assert.Contains("MarkItDown URI conversion failed", ex.Message);
         }
     }
 
@@ -139,8 +134,7 @@ public class MarkDownConverterTests
             _output.WriteLine($"Testing config: {config.KeepDataUris}, {config.EnablePlugins}, {config.LlmModel}, {config.DocIntelEndpoint}");
             var result = converter.Convert(filePath, config);
             Assert.NotNull(result);
-            Assert.NotNull(result.Text);
-            Assert.NotEmpty(result.Text);
+            Assert.NotEmpty(result);
         }
     }
 
@@ -156,8 +150,7 @@ public class MarkDownConverterTests
         {
             var result = converter.Convert(stream, "txt", config);
             Assert.NotNull(result);
-            Assert.NotNull(result.Text);
-            Assert.NotEmpty(result.Text);
+            Assert.NotEmpty(result);
         }
     }
 
@@ -174,9 +167,9 @@ public class MarkDownConverterTests
             var result = converter.ConvertUri(uri, config);
             Assert.NotNull(result);
         }
-        catch (Exception ex)
+        catch (MarkItDownConversionException ex)
         {
-            Assert.Contains("MarkItDown conversion failed", ex.Message);
+            Assert.Contains("MarkItDown URI conversion failed", ex.Message);
         }
     }
 
@@ -192,16 +185,48 @@ public class MarkDownConverterTests
         {
             var result = converter.ConvertUri(uri);
             Assert.NotNull(result);
-            Assert.False(string.IsNullOrEmpty(result.Text));
-            _output.WriteLine($"YouTube conversion successful: {result.Text.Length} chars");
+            Assert.False(string.IsNullOrEmpty(result));
+            _output.WriteLine($"YouTube conversion successful: {result.Length} chars");
             _output.WriteLine("Content:");
-            _output.WriteLine(result.Text);
+            _output.WriteLine(result);
         }
-        catch (Exception ex)
+        catch (MarkItDownConversionException ex)
         {
             _output.WriteLine($"YouTube conversion failed: {ex.Message}");
             // YouTube might require additional setup, so we note it but don't fail the test
-            Assert.Contains("MarkItDown conversion failed", ex.Message);
+            Assert.Contains("MarkItDown URI conversion failed", ex.Message);
         }
+    }
+
+    [Fact]
+    public async Task ConvertAsync_ReturnsMarkdown()
+    {
+        _output.WriteLine("Testing async conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "tst-text.txt");
+
+        var result = await converter.ConvertAsync(filePath);
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void CreateOpenAiClient_ThrowsException_WhenOpenAiNotInstalled()
+    {
+        _output.WriteLine("Testing OpenAI client creation without package");
+
+        // Temporarily rename openai if it exists to simulate not installed
+        var exception = Assert.Throws<MarkItDownConversionException>(() => MarkDownConverter.CreateOpenAiClient("fake-key"));
+        Assert.Contains("OpenAI package not installed", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateConfigRequirements_ThrowsException_ForMissingPackages()
+    {
+        _output.WriteLine("Testing config validation");
+
+        var config = new MarkDownConfig { DocIntelEndpoint = "endpoint" };
+        var exception = Assert.Throws<MarkItDownConversionException>(() => MarkDownConverter.ValidateConfigRequirements(config));
+        Assert.Contains("Azure Document Intelligence package not installed", exception.Message);
     }
 }

@@ -69,10 +69,9 @@ using AIKit.MarkItDown;
 var converter = new MarkDownConverter();
 
 // Convert a file to markdown
-var result = converter.Convert("path/to/your/file.pdf");
+string markdown = converter.Convert("path/to/your/file.pdf");
 
-Console.WriteLine(result.Text);
-Console.WriteLine($"Title: {result.Title}");
+Console.WriteLine(markdown);
 ```
 
 ### Advanced Usage with Configuration
@@ -91,7 +90,7 @@ var config = new MarkDownConfig
 };
 
 // Convert with config
-var result = converter.Convert("document.pdf", config);
+string markdown = converter.Convert("document.pdf", config);
 ```
 
 ### Convert Streams
@@ -99,14 +98,14 @@ var result = converter.Convert("document.pdf", config);
 ```csharp
 using (var stream = File.OpenRead("file.pdf"))
 {
-    var result = converter.Convert(stream, "pdf");
+    string markdown = converter.Convert(stream, "pdf");
 }
 ```
 
 ### Convert URLs
 
 ```csharp
-var result = converter.ConvertUri("https://www.youtube.com/watch?v=example");
+string markdown = converter.ConvertUri("https://www.youtube.com/watch?v=example");
 ```
 
 ### Error Handling
@@ -117,27 +116,49 @@ using AIKit.MarkItDown;
 try
 {
     var converter = new MarkDownConverter();
-    var result = converter.Convert("file.pdf");
+    string markdown = converter.Convert("file.pdf");
     // Process result
 }
-catch (Exception ex)
+catch (MarkItDownConversionException ex)
 {
     Console.WriteLine($"Conversion failed: {ex.Message}");
 }
 ```
 
+### Async Operations
+
+```csharp
+// All convert methods have async equivalents
+string markdown = await converter.ConvertAsync("file.pdf", config);
+string streamMarkdown = await converter.ConvertAsync(stream, "pdf", config);
+string uriMarkdown = await converter.ConvertAsyncUri("https://example.com", config);
+```
+
+### Creating OpenAI Client
+
+```csharp
+var config = new MarkDownConfig
+{
+    OpenAiApiKey = "your-api-key",
+    LlmModel = "gpt-4o"
+};
+```
+
+The OpenAI client will be created automatically when needed.
+
+### Configuration Validation
+
+```csharp
+// Validate that required packages are installed for config
+MarkDownConverter.ValidateConfigRequirements(config);
+```
+
 ## API Reference
-
-### MarkDownResult Class
-
-- `string? Text` - The converted Markdown text
-- `string? Title` - Document title (if available)
-- `Dictionary<string, object> Metadata` - Additional metadata
 
 ### MarkDownConfig Class
 
 - `string? DocIntelEndpoint` - Azure Document Intelligence endpoint
-- `PyObject? LlmClient` - Python OpenAI client instance
+- `string? OpenAiApiKey` - OpenAI API key for LLM features
 - `string? LlmModel` - LLM model name (e.g., "gpt-4o")
 - `string? LlmPrompt` - Custom prompt for LLM features
 - `bool KeepDataUris` - Preserve image data URIs
@@ -148,10 +169,16 @@ catch (Exception ex)
 ### MarkDownConverter Class
 
 - `MarkDownConverter()` - Constructor with automatic Python detection
-- `MarkDownResult Convert(string filePath)` - Convert file to markdown
-- `MarkDownResult Convert(string filePath, MarkDownConfig config)` - Convert with config
-- `MarkDownResult Convert(Stream stream, string extension, MarkDownConfig config = null)` - Convert stream
-- `MarkDownResult ConvertUri(string uri, MarkDownConfig config = null)` - Convert URL
+- `string Convert(string filePath)` - Convert file to markdown
+- `string Convert(string filePath, MarkDownConfig config)` - Convert with config
+- `string Convert(Stream stream, string extension, MarkDownConfig config = null)` - Convert stream
+- `string ConvertUri(string uri, MarkDownConfig config = null)` - Convert URL
+- `Task<string> ConvertAsync(string filePath)` - Async file conversion
+- `Task<string> ConvertAsync(string filePath, MarkDownConfig config)` - Async file conversion with config
+- `Task<string> ConvertAsync(Stream stream, string extension, MarkDownConfig config = null)` - Async stream conversion
+- `Task<string> ConvertAsyncUri(string uri, MarkDownConfig config = null)` - Async URI conversion
+- `static PyObject CreateOpenAiClient(string apiKey)` - Create Python OpenAI client
+- `static void ValidateConfigRequirements(MarkDownConfig config)` - Validate config dependencies
 
 ## Notes
 

@@ -1,8 +1,7 @@
 using AIKit.MarkItDown.Client;
-using Xunit.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
-using Xunit;
+using Xunit.Abstractions;
 
 namespace AIKit.MarkItDown.Tests;
 
@@ -53,7 +52,7 @@ public class E2eTests : IAsyncLifetime
         // Assert
         Assert.NotNull(markdown);
         Assert.True(markdown.Length > 0, "Markdown content should not be empty");
-        _output.WriteLine($@"Response received: 
+        _output.WriteLine($@"Response received:
             Markdown length={markdown.Length},
             Content preview={markdown.Substring(0, Math.Min(100, markdown.Length))}
         ");

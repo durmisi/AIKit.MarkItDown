@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace AIKit.MarkItDown.Client;
 
 public class MarkDownResult
