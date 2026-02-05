@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AIKit.MarkItDown.Test\AIKit.MarkItDown.Test.csproj" />
+    <ProjectReference Include="..\AIKit.MarkItDown.Tests\AIKit.MarkItDown.Tests.csproj" />
   </ItemGroup>
 
 </Project>

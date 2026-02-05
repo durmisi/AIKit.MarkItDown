@@ -1,6 +1,0 @@
-@AIKit.MarkItDown.Test_HostAddress = http://localhost:5233
-
-GET {{AIKit.MarkItDown.Test_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
