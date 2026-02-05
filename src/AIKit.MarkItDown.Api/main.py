@@ -11,21 +11,25 @@ MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB limit
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+app = FastAPI(
+    title="AIKit MarkItDown API",
+    description="API for converting various file formats to Markdown using the MarkItDown library",
+    version="1.0.0"
+)
 
 # Initialize MarkItDown
 logger.info("Initializing MarkItDown converter")
 md = MarkItDown()
 
-@app.get("/")
+@app.get("/", tags=["General"])
 async def root():
     return {"message": "Hello from FastAPI in Aspire"}
 
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 async def health():
     return {"status": "healthy"}
 
-@app.post("/convert")
+@app.post("/convert", tags=["Conversion"], summary="Convert file to Markdown")
 async def convert_file(file: UploadFile = File(...)):
     logger.info(f"Convert endpoint called with file: {file.filename}")
     if not file.filename:
