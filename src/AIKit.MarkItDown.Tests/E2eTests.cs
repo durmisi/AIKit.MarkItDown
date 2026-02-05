@@ -2,88 +2,90 @@ using AIKit.MarkItDown.Client;
 using Xunit.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
+using Xunit;
 
 namespace AIKit.MarkItDown.Tests;
 
-public class E2eTests
+public class E2eTests : IAsyncLifetime
 {
     private readonly ITestOutputHelper _output;
     private Process? _uvicornProcess;
+    private HttpClient? _httpClient;
+    private MarkItDownClient? _client;
+
+    private const string ServerUrl = "http://localhost:8000";
+    private const string HealthEndpoint = "/health";
+    private const string TestPdfFileName = "pdf-test.pdf";
+    private const int ServerPort = 8000;
+    private const int MaxRetries = 30;
 
     public E2eTests(ITestOutputHelper output)
     {
         _output = output;
     }
 
+    public async Task InitializeAsync()
+    {
+        await StartServerAsync();
+        await WaitForServerReadyAsync();
+        InitializeClient();
+    }
+
+    public async Task DisposeAsync()
+    {
+        await StopServerAsync();
+        _httpClient?.Dispose();
+    }
+
     [Fact]
     public async Task UploadPdfAndVerifyMarkdown()
     {
-        // Start the FastAPI server manually
+        // Arrange
+        var pdfPath = Path.Combine(AppContext.BaseDirectory, TestPdfFileName);
+        Assert.True(File.Exists(pdfPath), $"Test PDF file not found: {pdfPath}");
+
+        _output.WriteLine($"Testing PDF conversion with file: {pdfPath}");
+
+        // Act
+        var response = await _client!.ConvertAsync(pdfPath);
+
+        // Assert
+        Assert.NotNull(response);
+        _output.WriteLine($"Response received: Filename={response.Filename}, Markdown length={response.Markdown?.Length ?? 0}");
+        Assert.Equal(TestPdfFileName, response.Filename);
+        Assert.NotNull(response.Markdown);
+        Assert.NotEmpty(response.Markdown);
+    }
+
+    private async Task StartServerAsync()
+    {
         var apiDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AIKit.MarkItDown.Server");
         _uvicornProcess = StartUvicornServer(apiDir);
-        
-        try
+        _output.WriteLine("Uvicorn server started.");
+    }
+
+    private async Task StopServerAsync()
+    {
+        if (_uvicornProcess != null && !_uvicornProcess.HasExited)
         {
-            _output.WriteLine("Uvicorn server started. Waiting for health check...");
-            
-            // Wait for server to be ready
-            await WaitForServerReady("http://localhost:8000/health");
-            _output.WriteLine("Server is ready.");
-            
-            // Create HttpClient (no SSL bypass needed for HTTP)
-            using var httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("http://localhost:8000"),
-                Timeout = TimeSpan.FromMinutes(5)
-            };
-
-            _output.WriteLine("HttpClient created.");
-
-            // Create logger
-            var logger = NullLogger<MarkItDownClient>.Instance;
-
-            // Instantiate the client
-            var client = new MarkItDownClient(httpClient, logger);
-
-            _output.WriteLine("MarkItDownClient instantiated.");
-
-            // Path to the test PDF
-            var pdfPath = Path.Combine(AppContext.BaseDirectory, "pdf-test.pdf");
-
-            _output.WriteLine($"PDF path: {pdfPath}");
-
-            // Convert the PDF
-            _output.WriteLine("Starting PDF conversion...");
-            try
-            {
-                var response = await client.ConvertAsync(pdfPath);
-
-                _output.WriteLine("PDF conversion completed.");
-
-                // Assertions
-                Assert.NotNull(response);
-                _output.WriteLine($"Response received: Filename={response.Filename}, Markdown length={response.Markdown?.Length ?? 0}");
-                Assert.Equal("pdf-test.pdf", response.Filename);
-                Assert.NotNull(response.Markdown);
-                Assert.NotEmpty(response.Markdown);
-            }
-            catch (Exception ex)
-            {
-                _output.WriteLine($"Error during conversion: {ex.Message}");
-                _output.WriteLine($"Inner exception: {ex.InnerException?.Message}");
-                throw;
-            }
+            _uvicornProcess.Kill();
+            await _uvicornProcess.WaitForExitAsync();
+            _output.WriteLine("Uvicorn server stopped.");
         }
-        finally
+    }
+
+    private void InitializeClient()
+    {
+        _httpClient = new HttpClient
         {
-            // Stop the server
-            if (_uvicornProcess != null && !_uvicornProcess.HasExited)
-            {
-                _uvicornProcess.Kill();
-                _uvicornProcess.WaitForExit();
-                _output.WriteLine("Uvicorn server stopped.");
-            }
-        }
+            BaseAddress = new Uri(ServerUrl),
+            Timeout = TimeSpan.FromMinutes(5)
+        };
+
+        var logger = NullLogger<MarkItDownClient>.Instance;
+        _client = new MarkItDownClient(_httpClient, logger);
+
+        _output.WriteLine("HttpClient and MarkItDownClient initialized.");
     }
 
     private Process StartUvicornServer(string apiDir)
@@ -91,32 +93,31 @@ public class E2eTests
         var startInfo = new ProcessStartInfo
         {
             FileName = "uvicorn",
-            Arguments = "main:app --host 0.0.0.0 --port 8000",
+            Arguments = $"main:app --host 0.0.0.0 --port {ServerPort}",
             WorkingDirectory = apiDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        
+
         var process = Process.Start(startInfo);
-        if (process == null)
-        {
-            throw new InvalidOperationException("Failed to start Uvicorn process.");
-        }
-        return process;
+        return process ?? throw new InvalidOperationException("Failed to start Uvicorn process.");
     }
 
-    private async Task WaitForServerReady(string healthUrl, int maxRetries = 30)
+    private async Task WaitForServerReadyAsync()
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-        for (int i = 0; i < maxRetries; i++)
+        _output.WriteLine("Waiting for server to be ready...");
+        using var healthClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+
+        for (int i = 0; i < MaxRetries; i++)
         {
             try
             {
-                var response = await client.GetAsync(healthUrl);
+                var response = await healthClient.GetAsync($"{ServerUrl}{HealthEndpoint}");
                 if (response.IsSuccessStatusCode)
                 {
+                    _output.WriteLine("Server is ready.");
                     return;
                 }
             }
@@ -126,6 +127,6 @@ public class E2eTests
             }
             await Task.Delay(1000);
         }
-        throw new TimeoutException("Server did not become ready.");
+        throw new TimeoutException("Server did not become ready within the expected time.");
     }
 }
