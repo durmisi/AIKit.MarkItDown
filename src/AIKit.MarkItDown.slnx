@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AIKit.MarkItDown.Tests/AIKit.MarkItDown.Tests.csproj" />
+  <Project Path="AIKit.MarkItDown/AIKit.MarkItDown.csproj" />
+</Solution>
