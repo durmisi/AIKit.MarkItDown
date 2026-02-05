@@ -15,6 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Aspire.Hosting.Testing" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AIKit.MarkItDown\AIKit.MarkItDown.csproj" />
+    <ProjectReference Include="..\AIKit.MarkItDown.AppHost\AIKit.MarkItDown.AppHost.csproj" />
+    <ProjectReference Include="..\AIKit.MarkItDown.Client\AIKit.MarkItDown.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
