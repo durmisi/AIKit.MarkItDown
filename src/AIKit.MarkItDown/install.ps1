@@ -6,6 +6,16 @@ if (!(Get-Command py -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+# Check Python version
+$pythonVersion = py -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+$versionParts = $pythonVersion -split '\.'
+$major = [int]$versionParts[0]
+$minor = [int]$versionParts[1]
+if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 8)) {
+    Write-Host "Python 3.8+ is required. Current version: $pythonVersion"
+    exit 1
+}
+
 # Install markitdown with all optional dependencies
 Write-Host "Installing markitdown[all]..."
 py -m pip install "markitdown[all]"

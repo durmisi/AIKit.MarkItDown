@@ -8,25 +8,31 @@ A C# wrapper around the Python [markitdown](https://github.com/microsoft/markitd
 ## Features
 
 - Convert multiple file formats to Markdown
+- Advanced features: OCR, speech transcription, LLM image descriptions
+- Azure Document Intelligence integration
+- Plugin system support
 - Hybrid C#/Python architecture for robust file processing
 - Automatic Python environment detection and setup
 - Easy integration with .NET applications
-- Async/await support
 
 ## Supported Formats
 
 - **Documents**: PDF, DOCX, PPTX, XLSX
-- **Images**: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP
-- **Audio**: MP3, WAV, M4A, FLAC
+- **Images**: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP (with EXIF metadata and OCR)
+- **Audio**: MP3, WAV, M4A, FLAC (with EXIF metadata and speech transcription)
 - **Web**: HTML, HTM
 - **Text**: TXT, CSV, JSON, XML
-- **Archives**: ZIP (with markdown content)
+- **Archives**: ZIP (iterates over contents)
+- **URLs**: YouTube, and other web URLs
+- **EBooks**: EPUB
+- **Emails**: MSG
 - And more...
 
 ## Prerequisites
 
 - .NET 10.0 or higher
-- Python 3.8 or higher (automatically detected from PATH or common installation locations)
+- Python 3.8 or higher (automatically detected from PATH)
+- For advanced features: Azure CLI (for Doc Intel), OpenAI API key (for LLM features)
 
 ## Installation
 
@@ -42,6 +48,16 @@ Or using Package Manager:
 Install-Package AIKit.MarkItDown
 ```
 
+### Python Dependencies
+
+Run the installation script to set up Python dependencies:
+
+```powershell
+.\install.ps1
+```
+
+This installs markitdown with all optional dependencies for full feature support.
+
 ## Usage
 
 ### Basic Usage
@@ -53,20 +69,44 @@ using AIKit.MarkItDown;
 var converter = new MarkDownConverter();
 
 // Convert a file to markdown
-string markdown = await converter.ConvertAsync("path/to/your/file.pdf");
+var result = converter.Convert("path/to/your/file.pdf");
 
-Console.WriteLine(markdown);
+Console.WriteLine(result.Text);
+Console.WriteLine($"Title: {result.Title}");
 ```
 
-### With Custom Python Path
+### Advanced Usage with Configuration
 
 ```csharp
 using AIKit.MarkItDown;
 
-// Specify Python executable path if needed
-var converter = new MarkDownConverter("path/to/python.exe");
+// Configure advanced features
+var config = new MarkDownConfig
+{
+    DocIntelEndpoint = "https://your-doc-intel-endpoint.cognitiveservices.azure.com/",
+    DocIntelKey = "your-doc-intel-key",
+    LlmModel = "gpt-4o",
+    KeepDataUris = true,
+    EnablePlugins = true
+};
 
-string markdown = await converter.ConvertAsync("document.docx");
+// Convert with config
+var result = converter.Convert("document.pdf", config);
+```
+
+### Convert Streams
+
+```csharp
+using (var stream = File.OpenRead("file.pdf"))
+{
+    var result = converter.Convert(stream, "pdf");
+}
+```
+
+### Convert URLs
+
+```csharp
+var result = converter.ConvertUri("https://www.youtube.com/watch?v=example");
 ```
 
 ### Error Handling
@@ -77,8 +117,8 @@ using AIKit.MarkItDown;
 try
 {
     var converter = new MarkDownConverter();
-    string markdown = await converter.ConvertAsync("file.pdf");
-    // Process markdown
+    var result = converter.Convert("file.pdf");
+    // Process result
 }
 catch (Exception ex)
 {
@@ -88,17 +128,37 @@ catch (Exception ex)
 
 ## API Reference
 
+### MarkDownResult Class
+
+- `string? Text` - The converted Markdown text
+- `string? Title` - Document title (if available)
+- `Dictionary<string, object> Metadata` - Additional metadata
+
+### MarkDownConfig Class
+
+- `string? DocIntelEndpoint` - Azure Document Intelligence endpoint
+- `PyObject? LlmClient` - Python OpenAI client instance
+- `string? LlmModel` - LLM model name (e.g., "gpt-4o")
+- `string? LlmPrompt` - Custom prompt for LLM features
+- `bool KeepDataUris` - Preserve image data URIs
+- `bool EnablePlugins` - Enable 3rd-party plugins
+- `string? DocIntelKey` - Azure Doc Intel authentication key
+- `List<string> Plugins` - List of plugin module names
+
 ### MarkDownConverter Class
 
 - `MarkDownConverter()` - Constructor with automatic Python detection
-- `MarkDownConverter(string pythonPath)` - Constructor with explicit Python path
-- `Task<string> ConvertAsync(string filePath)` - Convert file to markdown asynchronously
+- `MarkDownResult Convert(string filePath)` - Convert file to markdown
+- `MarkDownResult Convert(string filePath, MarkDownConfig config)` - Convert with config
+- `MarkDownResult Convert(Stream stream, string extension, MarkDownConfig config = null)` - Convert stream
+- `MarkDownResult ConvertUri(string uri, MarkDownConfig config = null)` - Convert URL
 
 ## Notes
 
 - The package automatically handles Python environment setup
 - First conversion may take longer due to Python initialization
-- Ensure Python and required packages are installed (see project repository for details)
+- Ensure Python and required packages are installed via `install.ps1`
+- For Azure/OpenAI features, configure credentials securely
 - For server-based usage, check the full project repository
 
 ## License
