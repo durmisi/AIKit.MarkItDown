@@ -15,8 +15,6 @@
     <PackageReference Include="Aspire.Hosting.Python" Version="13.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AIKit.MarkItDown.Tests\AIKit.MarkItDown.Tests.csproj" />
-  </ItemGroup>
+
 
 </Project>
