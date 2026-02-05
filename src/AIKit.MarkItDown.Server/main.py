@@ -1,8 +1,24 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.responses import JSONResponse
 from markitdown import MarkItDown
 import io
 import os
 import logging
+import sys
+import threading
+
+# Set sys.excepthook for main thread uncaught exceptions (e.g., startup)
+def custom_sys_excepthook(exc_type, exc_value, exc_traceback):
+    logger.critical(f"Uncaught exception in main thread: {exc_value}", exc_info=(exc_type, exc_value, exc_traceback))
+    sys.exit(1)  # Graceful exit to prevent hanging
+
+sys.excepthook = custom_sys_excepthook
+
+# Set threading.excepthook for thread exceptions
+def custom_threading_excepthook(args):
+    logger.error(f"Uncaught exception in thread {args.thread}: {args.exc_value}", exc_info=args.exc_value)
+
+threading.excepthook = custom_threading_excepthook
 
 # Constants
 MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB limit
@@ -16,6 +32,28 @@ app = FastAPI(
     description="API for converting various file formats to Markdown using the MarkItDown library",
     version="1.0.0"
 )
+
+# Global exception handler for unhandled exceptions
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)  # Logs full traceback
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please try again later."}
+    )
+
+# Middleware for exception handling
+@app.middleware("http")
+async def exception_handling_middleware(request: Request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as exc:
+        logger.error(f"Exception in middleware: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error."}
+        )
 
 # Initialize MarkItDown
 logger.info("Initializing MarkItDown converter")
