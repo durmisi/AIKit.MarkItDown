@@ -6,18 +6,22 @@ namespace AIKit.MarkItDown;
 public class MarkDownConverter
 {
     private const long MaxStreamSizeBytes = 100 * 1024 * 1024; // 100 MB
+    private const int ProcessTimeoutMs = 5000;
+    private const int PythonInitTimeoutMs = 30000;
 
     static MarkDownConverter()
     {
         string pythonExe = GetPythonExecutable();
-        if (pythonExe != null)
+        if (pythonExe == null)
         {
-            string dllPath = GetPythonDllPath(pythonExe);
-            if (dllPath != null && File.Exists(dllPath))
-            {
-                Runtime.PythonDLL = dllPath;
-            }
+            throw new InvalidOperationException("Python 3.8+ is required but not found. Please install Python and run install.ps1 to install dependencies.");
         }
+        string dllPath = GetPythonDllPath(pythonExe);
+        if (dllPath == null)
+        {
+            throw new InvalidOperationException("Python DLL not found. Ensure Python is properly installed.");
+        }
+        Runtime.PythonDLL = dllPath;
 
         if (!PythonEngine.IsInitialized)
         {
@@ -232,26 +236,6 @@ public class MarkDownConverter
         }
     }
 
-    public Task<string> ConvertAsync(string filePath)
-    {
-        return Task.Run(() => Convert(filePath));
-    }
-
-    public Task<string> ConvertAsync(string filePath, MarkDownConfig config = null)
-    {
-        return Task.Run(() => Convert(filePath, config));
-    }
-
-    public Task<string> ConvertAsync(Stream stream, string extension, MarkDownConfig config = null)
-    {
-        return Task.Run(() => Convert(stream, extension, config));
-    }
-
-    public Task<string> ConvertAsyncUri(string uri, MarkDownConfig config = null)
-    {
-        return Task.Run(() => ConvertUri(uri, config));
-    }
-
     private static void PopulateKwargs(PyDict kwargs, MarkDownConfig config)
     {
         if (config != null)
@@ -300,8 +284,12 @@ public class MarkDownConverter
             };
 
             process.Start();
+            if (!process.WaitForExit(ProcessTimeoutMs))
+            {
+                process.Kill();
+                return null;
+            }
             string output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
             if (process.ExitCode == 0)
             {
                 return output.Trim();
@@ -328,8 +316,12 @@ public class MarkDownConverter
                 }
             };
             process.Start();
+            if (!process.WaitForExit(ProcessTimeoutMs))
+            {
+                process.Kill();
+                return null;
+            }
             string dllName = process.StandardOutput.ReadToEnd().Trim();
-            process.WaitForExit();
             if (process.ExitCode == 0 && !string.IsNullOrEmpty(dllName))
             {
                 string pythonDir = GetPythonDir(pythonExe);
@@ -357,8 +349,12 @@ public class MarkDownConverter
                 }
             };
             process.Start();
+            if (!process.WaitForExit(ProcessTimeoutMs))
+            {
+                process.Kill();
+                return Path.GetDirectoryName(pythonExe); // fallback
+            }
             string exePath = process.StandardOutput.ReadToEnd().Trim();
-            process.WaitForExit();
             if (process.ExitCode == 0 && !string.IsNullOrEmpty(exePath))
             {
                 return Path.GetDirectoryName(exePath);
