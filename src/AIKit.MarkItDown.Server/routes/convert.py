@@ -47,6 +47,12 @@ async def convert_file(
             kwargs['check_extractable'] = False
         if config:
             
+            if (config.docintel_endpoint and not config.docintel_key) or (config.docintel_key and not config.docintel_endpoint):
+                raise HTTPException(status_code=400, detail="Both docintel_endpoint and docintel_key must be provided together.")
+            
+            if config.llm_api_key and not config.llm_model:
+                raise HTTPException(status_code=400, detail="Both llm_model and llm_api_key must be provided together.")
+            
             if config.docintel_endpoint:
                 kwargs['docintel_endpoint'] = config.docintel_endpoint
             if config.docintel_key:

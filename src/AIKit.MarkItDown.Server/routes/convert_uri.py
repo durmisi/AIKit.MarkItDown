@@ -23,6 +23,12 @@ async def convert_uri(request: ConvertUriRequest):
         if request.config:
             config = request.config
             
+            if (config.docintel_endpoint and not config.docintel_key) or (config.docintel_key and not config.docintel_endpoint):
+                raise HTTPException(status_code=400, detail="Both docintel_endpoint and docintel_key must be provided together.")
+            
+            if config.llm_api_key and not config.llm_model:
+                raise HTTPException(status_code=400, detail="Both llm_model and llm_api_key must be provided together.")
+            
             if config.docintel_endpoint:
                 kwargs['docintel_endpoint'] = config.docintel_endpoint
             
@@ -39,6 +45,7 @@ async def convert_uri(request: ConvertUriRequest):
                 
             if config.keep_data_uris is not None:
                 kwargs['keep_data_uris'] = config.keep_data_uris
+                
             if config.enable_plugins is not None:
                 kwargs['enable_plugins'] = config.enable_plugins
         
