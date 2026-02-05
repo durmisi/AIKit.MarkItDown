@@ -6,6 +6,7 @@ import threading
 
 from routes.convert import router
 from routes.convert_uri import router as uri_router
+from constants import VERSION
 
 # Set sys.excepthook for main thread uncaught exceptions (e.g., startup)
 def custom_sys_excepthook(exc_type, exc_value, exc_traceback):
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="AIKit MarkItDown API",
     description="API for converting various file formats to Markdown using the MarkItDown library",
-    version="1.0.0"
+    version=VERSION
 )
 
 # Global exception handler for unhandled exceptions
@@ -58,7 +59,8 @@ async def root():
 
 @app.get("/health", tags=["Health"])
 async def health():
-    return {"status": "healthy"}
+    """Health check endpoint."""
+    return {"status": "healthy", "version": VERSION}
 
 app.include_router(router)
 app.include_router(uri_router)

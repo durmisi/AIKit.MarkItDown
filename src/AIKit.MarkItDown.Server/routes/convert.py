@@ -1,20 +1,15 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from fastapi.responses import Response
-from markitdown import MarkItDown
-import openai
 import io
 import logging
 from models import MarkDownConfig
 from typing import Optional
-
-# Constants
-MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB limit
+from utils import build_conversion_kwargs
+from converter import md
+from constants import MAX_FILE_SIZE
 
 # Configure logging
 logger = logging.getLogger(__name__)
-
-# Initialize MarkItDown
-md = MarkItDown(enable_plugins=True)
 
 router = APIRouter()
 
@@ -24,6 +19,19 @@ async def convert_file(
     extension: str = Form(None),
     config: Optional[MarkDownConfig] = None
 ):
+    """Convert an uploaded file to Markdown format.
+    
+    Args:
+        file: The file to convert.
+        extension: Optional file extension override.
+        config: Optional configuration for the conversion.
+        
+    Returns:
+        Markdown content as plain text response.
+        
+    Raises:
+        HTTPException: For validation errors or conversion failures.
+    """
     logger.info(f"Convert endpoint called with file: {file.filename}, extension: {extension}")
     if not file.filename:
         logger.warning("No file provided in convert request")
@@ -46,36 +54,15 @@ async def convert_file(
         if file_extension == 'pdf':
             kwargs['check_extractable'] = False
         if config:
-            
-            if (config.docintel_endpoint and not config.docintel_key) or (config.docintel_key and not config.docintel_endpoint):
-                raise HTTPException(status_code=400, detail="Both docintel_endpoint and docintel_key must be provided together.")
-            
-            if config.llm_api_key and not config.llm_model:
-                raise HTTPException(status_code=400, detail="Both llm_model and llm_api_key must be provided together.")
-            
-            if config.docintel_endpoint:
-                kwargs['docintel_endpoint'] = config.docintel_endpoint
-            if config.docintel_key:
-                kwargs['docintel_key'] = config.docintel_key
-            
-            if config.llm_model:
-                kwargs['llm_model'] = config.llm_model
-            if config.llm_prompt:
-                kwargs['llm_prompt'] = config.llm_prompt
-            
-            if config.llm_api_key and config.llm_model:
-                client = openai.OpenAI(api_key=config.llm_api_key)
-                kwargs['llm_client'] = client
-                
-            if config.keep_data_uris is not None:
-                kwargs['keep_data_uris'] = config.keep_data_uris
-            if config.enable_plugins is not None:
-                kwargs['enable_plugins'] = config.enable_plugins
+            kwargs.update(build_conversion_kwargs(config))
         
         result = md.convert_stream(stream, file_extension=file_extension, **kwargs)
         logger.info(f"Conversion successful for file: {file.filename}")
         
         return Response(content=result.text_content, media_type="text/markdown")
+    except ValueError as e:
+        logger.warning(f"Validation error for file {file.filename}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Conversion failed for file {file.filename}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
