@@ -15,7 +15,6 @@ public class E2eTests : IAsyncLifetime
 
     private const string ServerUrl = "http://localhost:8000";
     private const string HealthEndpoint = "/health";
-    private static readonly string[] TestFileNames = { "pdf-test.pdf", "tst-text.txt" };
     private const int ServerPort = 8000;
     private const int MaxRetries = 30;
 
@@ -53,7 +52,12 @@ public class E2eTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(response);
-        _output.WriteLine($"Response received: Filename={response.Filename}, Markdown length={response.Markdown?.Length ?? 0}");
+        _output.WriteLine($@"Response received: 
+            Filename={response.Filename}, 
+            Markdown length={response.Markdown?.Length ?? 0},
+            Markdown content={response.Markdown}
+        ");
+
         Assert.Equal(fileName, response.Filename);
         Assert.NotNull(response.Markdown);
         Assert.NotEmpty(response.Markdown);

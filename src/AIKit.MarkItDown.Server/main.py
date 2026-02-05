@@ -49,7 +49,10 @@ async def convert_file(file: UploadFile = File(...)):
         
         # Use BytesIO for stream
         stream = io.BytesIO(content)
-        result = md.convert_stream(stream, file_extension=file_extension)
+        kwargs = {}
+        if file_extension == 'pdf':
+            kwargs['check_extractable'] = False
+        result = md.convert_stream(stream, file_extension=file_extension, **kwargs)
         logger.info(f"Conversion successful for file: {file.filename}")
         
         return {"filename": file.filename, "markdown": result.text_content}

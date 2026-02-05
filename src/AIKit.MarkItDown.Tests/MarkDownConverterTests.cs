@@ -15,11 +15,14 @@ public class MarkDownConverterTests
     [Fact]
     public void ConvertToMarkdown_ReturnsMarkdown_ForPdfTestFile()
     {
+        _output.WriteLine("Starting PDF conversion test");
         var converter = new MarkDownConverter();
         var filePath = "pdf-test.pdf"; // Ensure this file exists in the test directory or provide a full path
+        _output.WriteLine($"Converting file: {filePath}");
 
         var result = converter.Convert(filePath);
 
+        _output.WriteLine($"Conversion result length: {result.Length}");
         _output.WriteLine(result);
 
         Assert.NotNull(result);
@@ -30,11 +33,14 @@ public class MarkDownConverterTests
     [Fact]
     public void ConvertToMarkdown_ThrowsException_WhenFileDoesNotExist()
     {
+        _output.WriteLine("Starting exception test for non-existent file");
         var converter = new MarkDownConverter();
         var nonExistentFile = "nonexistent.pdf";
+        _output.WriteLine($"Attempting to convert non-existent file: {nonExistentFile}");
 
         var exception = Assert.Throws<Exception>(() => converter.Convert(nonExistentFile));
-        _output.WriteLine(exception.Message);
+        _output.WriteLine($"Exception type: {exception.GetType().Name}");
+        _output.WriteLine($"Exception message: {exception.Message}");
         // The exception could be from installation failure or conversion failure
         Assert.True(exception.Message.Contains("Failed to install") || exception.Message.Contains("MarkItDown conversion failed"));
     }

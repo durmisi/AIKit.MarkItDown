@@ -30,9 +30,32 @@ namespace AIKit.MarkItDown
             {
                 try
                 {
+                    PythonEngine.RunSimpleString("import logging; logging.disable(logging.WARNING)");
                     dynamic markitdown = Py.Import("markitdown");
                     dynamic md = markitdown.MarkItDown();
-                    dynamic result = md.convert(filePath);
+                    dynamic result;
+                    string extension = Path.GetExtension(filePath).ToLowerInvariant().TrimStart('.');
+                    if (extension == "pdf")
+                    {
+                        byte[] fileBytes;
+                        try
+                        {
+                            fileBytes = File.ReadAllBytes(filePath);
+                        }
+                        catch (FileNotFoundException ex)
+                        {
+                            throw new Exception($"MarkItDown conversion failed: {ex.Message}");
+                        }
+                        dynamic io = Py.Import("io");
+                        using (var stream = io.BytesIO(fileBytes))
+                        {
+                            result = md.convert_stream(stream, file_extension: extension, check_extractable: false);
+                        }
+                    }
+                    else
+                    {
+                        result = md.convert(filePath);
+                    }
                     return result.text_content;
                 }
                 catch (PythonException ex)
