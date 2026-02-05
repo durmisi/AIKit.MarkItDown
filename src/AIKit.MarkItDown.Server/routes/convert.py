@@ -46,21 +46,25 @@ async def convert_file(
         if file_extension == 'pdf':
             kwargs['check_extractable'] = False
         if config:
+            
             if config.docintel_endpoint:
                 kwargs['docintel_endpoint'] = config.docintel_endpoint
+            if config.docintel_key:
+                kwargs['docintel_key'] = config.docintel_key
+            
             if config.llm_model:
                 kwargs['llm_model'] = config.llm_model
             if config.llm_prompt:
                 kwargs['llm_prompt'] = config.llm_prompt
+            
+            if config.llm_api_key and config.llm_model:
+                client = openai.OpenAI(api_key=config.llm_api_key)
+                kwargs['llm_client'] = client
+                
             if config.keep_data_uris is not None:
                 kwargs['keep_data_uris'] = config.keep_data_uris
             if config.enable_plugins is not None:
                 kwargs['enable_plugins'] = config.enable_plugins
-            if config.docintel_key:
-                kwargs['docintel_key'] = config.docintel_key
-            if config.llm_api_key and config.llm_model:
-                client = openai.OpenAI(api_key=config.llm_api_key)
-                kwargs['llm_client'] = client
         
         result = md.convert_stream(stream, file_extension=file_extension, **kwargs)
         logger.info(f"Conversion successful for file: {file.filename}")
