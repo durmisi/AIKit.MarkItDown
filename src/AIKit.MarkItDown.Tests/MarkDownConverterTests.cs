@@ -1,5 +1,6 @@
 ﻿using AIKit.MarkItDown;
 using Xunit.Abstractions;
+using System.IO;
 
 namespace AIKit.MarkItDown.Tests;
 
@@ -12,12 +13,14 @@ public class MarkDownConverterTests
         _output = output;
     }
 
-    [Fact]
-    public void ConvertToMarkdown_ReturnsMarkdown_ForPdfTestFile()
+    [Theory]
+    [InlineData("pdf-test.pdf")]
+    [InlineData("tst-text.txt")]
+    public void ConvertToMarkdown_ReturnsMarkdown_ForTestFile(string fileName)
     {
-        _output.WriteLine("Starting PDF conversion test");
+        _output.WriteLine($"Starting conversion test for file: {fileName}");
         var converter = new MarkDownConverter();
-        var filePath = "pdf-test.pdf"; // Ensure this file exists in the test directory or provide a full path
+        var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
         _output.WriteLine($"Converting file: {filePath}");
 
         var result = converter.Convert(filePath);
