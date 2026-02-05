@@ -85,8 +85,3 @@ string markdown = response.Markdown;
 ## Contributing
 
 Contributions are welcome! Please submit issues and pull requests.
-
-## License
-
-[Specify license here]</content>
-<parameter name="filePath">c:\Projects\AIKit.MarkItDown\README.md
