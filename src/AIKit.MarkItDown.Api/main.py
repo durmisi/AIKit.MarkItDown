@@ -4,6 +4,9 @@ import io
 import os
 import logging
 
+# Constants
+MAX_FILE_SIZE = 200 * 1024 * 1024  # 200MB limit
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -33,9 +36,9 @@ async def convert_file(file: UploadFile = File(...)):
         content = await file.read()
         file_size_mb = len(content) / (1024 * 1024)
         logger.info(f"File size: {file_size_mb:.2f} MB")
-        if len(content) > 200 * 1024 * 1024:  # 200MB limit
+        if len(content) > MAX_FILE_SIZE:
             logger.warning(f"File too large: {file_size_mb:.2f} MB")
-            raise HTTPException(status_code=413, detail="File too large. Maximum size is 200MB.")
+            raise HTTPException(status_code=413, detail=f"File too large. Maximum size is {MAX_FILE_SIZE / (1024 * 1024)}MB.")
         
         file_extension = file.filename.split('.')[-1].lower() if '.' in file.filename else None
         logger.info(f"File extension: {file_extension}")
