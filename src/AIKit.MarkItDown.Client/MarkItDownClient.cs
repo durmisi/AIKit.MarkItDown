@@ -15,24 +15,43 @@ public class MarkItDownClient : IDisposable
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<FileConversionResponse> ConvertAsync(Stream fileStream, string fileName)
+    public async Task<MarkDownResult> ConvertAsync(Stream fileStream, string fileName, string? extension = null, MarkDownConfig? config = null)
     {
         _logger.LogInformation("Starting file conversion for {FileName}", fileName);
         using var content = new MultipartFormDataContent();
         content.Add(new StreamContent(fileStream), "file", fileName);
+        if (extension != null)
+        {
+            content.Add(new StringContent(extension), "extension");
+        }
+        if (config != null)
+        {
+            content.Add(new StringContent(System.Text.Json.JsonSerializer.Serialize(config)), "config");
+        }
         var response = await _httpClient.PostAsync("/convert", content);
         response.EnsureSuccessStatusCode();
-        var result = await response.Content.ReadFromJsonAsync<FileConversionResponse>() ?? new FileConversionResponse();
-        _logger.LogInformation("File conversion completed for {FileName}, result filename: {ResultFilename}", fileName, result.Filename);
+        var result = await response.Content.ReadFromJsonAsync<MarkDownResult>() ?? new MarkDownResult();
+        _logger.LogInformation("File conversion completed for {FileName}", fileName);
         return result;
     }
 
-    public async Task<FileConversionResponse> ConvertAsync(string filePath)
+    public async Task<MarkDownResult> ConvertAsync(string filePath, string? extension = null, MarkDownConfig? config = null)
     {
         _logger.LogInformation("Converting file from path {FilePath}", filePath);
         using var stream = File.OpenRead(filePath);
         string fileName = Path.GetFileName(filePath);
-        return await ConvertAsync(stream, fileName);
+        return await ConvertAsync(stream, fileName, extension, config);
+    }
+
+    public async Task<MarkDownResult> ConvertUriAsync(string uri, MarkDownConfig? config = null)
+    {
+        _logger.LogInformation("Converting URI {Uri}", uri);
+        var request = new ConvertUriRequest { Uri = uri, Config = config };
+        var response = await _httpClient.PostAsJsonAsync("/convert_uri", request);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<MarkDownResult>() ?? new MarkDownResult();
+        _logger.LogInformation("URI conversion completed for {Uri}", uri);
+        return result;
     }
 
     public void Dispose()

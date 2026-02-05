@@ -69,10 +69,28 @@ string markdown = await converter.ConvertAsync("path/to/file.pdf");
 ```csharp
 using AIKit.MarkItDown.Client;
 
-var client = new MarkItDownClient("http://localhost:8000");
-var response = await client.ConvertFileAsync("path/to/file.pdf");
-string markdown = response.Markdown;
+var client = new MarkItDownClient(httpClient, logger);
+
+// Convert file
+var result = await client.ConvertAsync("path/to/file.pdf");
+string markdown = result.Text;
+
+// Convert with config
+var config = new MarkDownConfig { KeepDataUris = true };
+var result = await client.ConvertAsync("path/to/file.pdf", config);
+
+// Convert file with extension override
+var result = await client.ConvertAsync("path/to/file", "pdf", config);
 ```
+
+### Direct API Usage
+
+The server provides REST APIs:
+
+- `POST /convert` - Convert uploaded file
+- `POST /convert_uri` - Convert URL/URI
+
+See [Server README](src/AIKit.MarkItDown.Server/README.md) for details.
 
 ## Development
 

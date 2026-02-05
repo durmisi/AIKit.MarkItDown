@@ -52,6 +52,67 @@ docker compose up --build
 ### Testing
 
 - Health check: `GET http://localhost:8000/health`
-- Convert file: `POST http://localhost:8000/convert` with multipart/form-data file upload
+- Convert file: `POST http://localhost:8000/convert` with multipart/form-data file upload and optional JSON config
+- Convert URI: `POST http://localhost:8000/convert_uri` with JSON body containing uri and optional config
 
-The server supports various file formats including PDF, DOCX, PPTX, XLSX, images, audio, and HTML.
+#### API Endpoints
+
+##### POST /convert
+
+Convert an uploaded file to Markdown.
+
+**Request:**
+
+- Content-Type: multipart/form-data
+- `file`: The file to convert
+- `extension` (optional): Override the file extension (e.g., "pdf", "docx")
+- `config` (optional): JSON string with MarkDownConfig
+
+**Response:**
+
+```json
+{
+  "text": "Markdown content...",
+  "title": "Document Title",
+  "metadata": {}
+}
+```
+
+##### POST /convert_uri
+
+Convert a URI (URL) to Markdown.
+
+**Request:**
+
+```json
+{
+  "uri": "https://example.com",
+  "config": {
+    "keep_data_uris": true,
+    "enable_plugins": false
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "text": "Markdown content...",
+  "title": "Page Title",
+  "metadata": {}
+}
+```
+
+#### Supported Formats
+
+The server supports various file formats including PDF, DOCX, PPTX, XLSX, images (with OCR), audio (with transcription), HTML, text files, ZIP archives, YouTube URLs, EPub, and more.
+
+#### Configuration Options
+
+- `docintel_endpoint`: Azure Document Intelligence endpoint
+- `llm_model`: LLM model for enhanced processing
+- `llm_prompt`: Custom prompt for LLM
+- `keep_data_uris`: Preserve data URIs in output
+- `enable_plugins`: Enable 3rd-party plugins
+- `docintel_key`: Azure Document Intelligence key

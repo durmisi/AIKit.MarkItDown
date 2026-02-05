@@ -53,14 +53,14 @@ public class E2eTests : IAsyncLifetime
         // Assert
         Assert.NotNull(response);
         _output.WriteLine($@"Response received: 
-            Filename={response.Filename}, 
-            Markdown length={response.Markdown?.Length ?? 0},
-            Markdown content={response.Markdown}
+            Text length={response.Text?.Length ?? 0},
+            Title={response.Title},
+            Metadata keys={response.Metadata?.Count ?? 0},
+            Text content={response.Text}
         ");
 
-        Assert.Equal(fileName, response.Filename);
-        Assert.NotNull(response.Markdown);
-        Assert.NotEmpty(response.Markdown);
+        Assert.NotNull(response.Text);
+        Assert.NotEmpty(response.Text);
     }
 
     private async Task StartServerAsync()
