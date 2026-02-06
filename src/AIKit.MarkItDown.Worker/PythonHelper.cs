@@ -58,8 +58,21 @@ public static class PythonHelper
     /// <returns>The path to the Python DLL, or null if not found.</returns>
     public static string? GetPythonDllPath(string pythonExe)
     {
-        string dll = ProcessHelper.Run(pythonExe, "-c \"import sys; print(f'python{sys.version_info.major}{sys.version_info.minor}.dll')\"");
-        return string.IsNullOrEmpty(dll) ? null : Path.Combine(Path.GetDirectoryName(pythonExe)!, dll);
+        if (OperatingSystem.IsWindows())
+        {
+            string dll = ProcessHelper.Run(pythonExe, "-c \"import sys; print(f'python{sys.version_info.major}{sys.version_info.minor}.dll')\"");
+            return string.IsNullOrEmpty(dll) ? null : Path.Combine(Path.GetDirectoryName(pythonExe)!, dll);
+        }
+        else
+        {
+            // On Linux/macOS, Python library is libpythonXY.so in LIBDIR
+            string libDir = ProcessHelper.Run(pythonExe, "-c \"import sysconfig; print(sysconfig.get_config_var('LIBDIR'))\"");
+            string version = ProcessHelper.Run(pythonExe, "-c \"import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')\"");
+            if (string.IsNullOrEmpty(libDir) || string.IsNullOrEmpty(version))
+                return null;
+            string dll = $"libpython{version}.so";
+            return Path.Combine(libDir, dll);
+        }
     }
 
     /// <summary>

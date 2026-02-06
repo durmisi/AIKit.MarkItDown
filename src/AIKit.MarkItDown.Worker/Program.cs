@@ -22,6 +22,9 @@ try
     var dllPath = PythonHelper.GetPythonDllPath(pythonExe)
         ?? throw new Exception("Python DLL not found");
     Runtime.PythonDLL = dllPath;
+    var pythonHome = Path.GetDirectoryName(pythonExe)
+        ?? throw new Exception("Failed to determine Python home directory");
+    PythonEngine.PythonHome = pythonHome;
     PythonEngine.Initialize();
     PythonEngine.BeginAllowThreads();
 
