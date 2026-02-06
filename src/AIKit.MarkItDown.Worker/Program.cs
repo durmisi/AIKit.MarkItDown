@@ -41,14 +41,18 @@ try
         PythonHelper.DisablePythonLogging();
         Console.Error.WriteLine("Python logging disabled");
 
-        dynamic md_module = Py.Import("markitdown._markitdown");
-        Console.Error.WriteLine("markitdown._markitdown module imported");
+        dynamic md_module = Py.Import("markitdown");
+        Console.Error.WriteLine("markitdown module imported");
 
-        // Debug: Print available attributes
-        var attrs = ((PyObject)md_module).Dir();
-        Console.Error.WriteLine($"markitdown._markitdown attributes: {string.Join(", ", attrs)}");
-
-        dynamic MarkItDown = md_module.GetAttr("MarkItDown");
+        dynamic MarkItDown;
+        try
+        {
+            MarkItDown = md_module.GetAttr("MarkItDown");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"MarkItDown class not found in markitdown module. Ensure markitdown[all] is installed in the Python environment used by the Worker. Inner exception: {ex.Message}");
+        }
         Console.Error.WriteLine("MarkItDown class retrieved");
 
         dynamic md = MarkItDown();

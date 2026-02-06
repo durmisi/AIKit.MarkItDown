@@ -26,10 +26,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: "3.10"
 
       - name: Install Python dependencies
-        run: python -m pip install -r src/AIKit.MarkItDown.Server/requirements.txt
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pwsh src/AIKit.MarkItDown/install.ps1
 
       - name: Restore dependencies
         run: dotnet restore src/AIKit.MarkItDown.slnx
