@@ -41,12 +41,12 @@ try
         PythonHelper.DisablePythonLogging();
         Console.Error.WriteLine("Python logging disabled");
 
-        dynamic md_module = Py.Import("markitdown");
-        Console.Error.WriteLine("markitdown module imported");
+        dynamic md_module = Py.Import("markitdown._markitdown");
+        Console.Error.WriteLine("markitdown._markitdown module imported");
 
         // Debug: Print available attributes
         var attrs = ((PyObject)md_module).Dir();
-        Console.Error.WriteLine($"markitdown attributes: {string.Join(", ", attrs)}");
+        Console.Error.WriteLine($"markitdown._markitdown attributes: {string.Join(", ", attrs)}");
 
         dynamic MarkItDown = md_module.GetAttr("MarkItDown");
         Console.Error.WriteLine("MarkItDown class retrieved");
