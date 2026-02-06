@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /coveragereport
 /Samples/AIKit.Samples.BasicRAG/.env
+.venv
