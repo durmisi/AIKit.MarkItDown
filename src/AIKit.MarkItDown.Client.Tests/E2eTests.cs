@@ -37,8 +37,18 @@ public class E2eTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/test.csv")]
+    [InlineData("files/test.docx")]
+    [InlineData("files/test.epub")]
+    [InlineData("files/test.html")]
+    [InlineData("files/test.ipynb")]
+    [InlineData("files/test.pdf")]
+    [InlineData("files/test.pptx")]
+    [InlineData("files/test.txt")]
+    [InlineData("files/test.xlsx")]
+    [InlineData("files/test.zip")]
+    [InlineData("files/tst-text.txt")]
     public async Task UploadFileAndVerifyMarkdown(string fileName)
     {
         // Arrange
@@ -63,7 +73,7 @@ public class E2eTests : IAsyncLifetime
     public async Task ConvertTextFileViaWorker_ShouldReturnMarkdown()
     {
         // Arrange
-        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "tst-text.txt"));
+        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestShared", "files", "tst-text.txt"));
         var input = new
         {
             Type = "file",
@@ -161,7 +171,27 @@ public class E2eTests : IAsyncLifetime
 
     private async Task<WorkerOutput> RunWorker(string inputJson)
     {
-        var workerBinDir = Path.Combine(Path.GetDirectoryName(typeof(E2eTests).Assembly.Location)!, "..", "..", "..", "..", "AIKit.MarkItDown.Worker", "bin", "Debug", "net10.0");
+        var baseDir = Path.GetDirectoryName(typeof(E2eTests).Assembly.Location)!;
+        var workerProjectDir = Path.Combine(baseDir, "..", "..", "..", "..", "AIKit.MarkItDown.Worker", "bin");
+        
+        // Try Debug first, then Release
+        var configurations = new[] { "Debug", "Release" };
+        string? workerBinDir = null;
+        foreach (var config in configurations)
+        {
+            var dir = Path.Combine(workerProjectDir, config, "net10.0");
+            if (Directory.Exists(dir) && File.Exists(Path.Combine(dir, "AIKit.MarkItDown.Worker.exe")))
+            {
+                workerBinDir = dir;
+                break;
+            }
+        }
+        
+        if (workerBinDir == null)
+        {
+            throw new FileNotFoundException("Could not find AIKit.MarkItDown.Worker.exe in Debug or Release directories.");
+        }
+        
         var exePath = Path.Combine(workerBinDir, "AIKit.MarkItDown.Worker.exe");
         var process = new Process
         {

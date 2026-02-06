@@ -19,7 +19,7 @@ public class WorkerTests
     public async Task ConvertTextFile_ShouldReturnMarkdown()
     {
         // Arrange
-        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "tst-text.txt"));
+        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestShared", "files", "tst-text.txt"));
         var input = new
         {
             Type = "file",
@@ -40,6 +40,101 @@ public class WorkerTests
         }
         Assert.True(result.Success);
         Assert.Contains("Test Document for MarkItDown", result.Result);
+    }
+
+    [Fact]
+    public async Task ConvertPDFFile_ShouldReturnMarkdown()
+    {
+        // Arrange
+        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestShared", "files", "pdf-test.pdf"));
+        var input = new
+        {
+            Type = "file",
+            Path = testFilePath,
+            Kwargs = new Dictionary<string, object>()
+        };
+        var jsonInput = JsonSerializer.Serialize(input);
+
+        // Act
+        var result = await RunWorker(jsonInput);
+
+        _output.WriteLine($"Result: Success={result.Success}, Result length={result.Result?.Length}, Error={result.Error}");
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Result);
+        Assert.NotEmpty(result.Result);
+    }
+
+    [Fact]
+    public async Task ConvertDocxFile_ShouldReturnMarkdown()
+    {
+        // Arrange
+        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestShared", "files", "test.docx"));
+        var input = new
+        {
+            Type = "file",
+            Path = testFilePath,
+            Kwargs = new Dictionary<string, object>()
+        };
+        var jsonInput = JsonSerializer.Serialize(input);
+
+        // Act
+        var result = await RunWorker(jsonInput);
+
+        _output.WriteLine($"Result: Success={result.Success}, Result length={result.Result?.Length}, Error={result.Error}");
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Result);
+        Assert.NotEmpty(result.Result);
+    }
+
+    [Fact]
+    public async Task ConvertHtmlFile_ShouldReturnMarkdown()
+    {
+        // Arrange
+        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestShared", "files", "test.html"));
+        var input = new
+        {
+            Type = "file",
+            Path = testFilePath,
+            Kwargs = new Dictionary<string, object>()
+        };
+        var jsonInput = JsonSerializer.Serialize(input);
+
+        // Act
+        var result = await RunWorker(jsonInput);
+
+        _output.WriteLine($"Result: Success={result.Success}, Result length={result.Result?.Length}, Error={result.Error}");
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Result);
+        Assert.NotEmpty(result.Result);
+    }
+
+    [Fact]
+    public async Task ConvertTestTxtFile_ShouldReturnMarkdown()
+    {
+        // Arrange
+        string testFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestShared", "files", "test.txt"));
+        var input = new
+        {
+            Type = "file",
+            Path = testFilePath,
+            Kwargs = new Dictionary<string, object>()
+        };
+        var jsonInput = JsonSerializer.Serialize(input);
+
+        // Act
+        var result = await RunWorker(jsonInput);
+
+        _output.WriteLine($"Result: Success={result.Success}, Result length={result.Result?.Length}, Error={result.Error}");
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Contains("Sample text content for testing", result.Result);
     }
 
     [Fact]
@@ -84,7 +179,27 @@ public class WorkerTests
 
     private async Task<WorkerOutput> RunWorker(string inputJson)
     {
-        var workerBinDir = Path.Combine(Path.GetDirectoryName(typeof(WorkerTests).Assembly.Location)!, "..", "..", "..", "..", "AIKit.MarkItDown.Worker", "bin", "Debug", "net10.0");
+        var baseDir = Path.GetDirectoryName(typeof(WorkerTests).Assembly.Location)!;
+        var workerProjectDir = Path.Combine(baseDir, "..", "..", "..", "..", "AIKit.MarkItDown.Worker", "bin");
+        
+        // Try Debug first, then Release
+        var configurations = new[] { "Debug", "Release" };
+        string? workerBinDir = null;
+        foreach (var config in configurations)
+        {
+            var dir = Path.Combine(workerProjectDir, config, "net10.0");
+            if (Directory.Exists(dir) && File.Exists(Path.Combine(dir, "AIKit.MarkItDown.Worker.exe")))
+            {
+                workerBinDir = dir;
+                break;
+            }
+        }
+        
+        if (workerBinDir == null)
+        {
+            throw new FileNotFoundException("Could not find AIKit.MarkItDown.Worker.exe in Debug or Release directories.");
+        }
+        
         var exePath = Path.Combine(workerBinDir, "AIKit.MarkItDown.Worker.exe");
         var process = new Process
         {

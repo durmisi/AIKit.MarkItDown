@@ -15,6 +15,9 @@ public class MarkDownConverterTests
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
+    [InlineData("files/test.docx")]
+    [InlineData("files/test.html")]
+    [InlineData("files/test.txt")]
     public void ConvertToMarkdown_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting conversion test for file: {fileName}");
@@ -37,6 +40,8 @@ public class MarkDownConverterTests
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
+    [InlineData("files/test.docx")]
+    [InlineData("files/test.html")]
     public void ConvertToMarkdown_WithConfig_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting conversion test with config for file: {fileName}");
@@ -74,6 +79,8 @@ public class MarkDownConverterTests
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
+    [InlineData("files/test.docx")]
+    [InlineData("files/test.html")]
     public void ConvertStream_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting stream conversion test for file: {fileName}");
@@ -119,6 +126,9 @@ public class MarkDownConverterTests
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
+    [InlineData("files/test.docx")]
+    [InlineData("files/test.html")]
+    [InlineData("files/test.txt")]
     public async Task ConvertAsyncToMarkdown_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting async conversion test for file: {fileName}");
@@ -138,8 +148,9 @@ public class MarkDownConverterTests
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/tst-text.txt")]
+    [InlineData("files/test.docx")]
     public async Task ConvertAsyncToMarkdown_WithConfig_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting async conversion test with config for file: {fileName}");
@@ -162,6 +173,8 @@ public class MarkDownConverterTests
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
+    [InlineData("files/test.docx")]
+    [InlineData("files/test.html")]
     public async Task ConvertAsyncStream_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting async stream conversion test for file: {fileName}");
@@ -530,7 +543,7 @@ public class MarkDownConverterTests
     {
         _output.WriteLine("Testing conversion with LLM config");
         var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "test.jpg");
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.jpg");
         var config = new MarkDownConfig { LlmModel = "gpt-4o", OpenAiApiKey = "mock-key" }; // Mock key, expect graceful failure or no LLM call
 
         try
@@ -555,7 +568,7 @@ public class MarkDownConverterTests
     {
         _output.WriteLine("Testing conversion with Azure Doc Intel config");
         var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "test.pdf");
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.pdf");
         var config = new MarkDownConfig { DocIntelEndpoint = "https://mock.endpoint", DocIntelKey = "mock-key" };
 
         try

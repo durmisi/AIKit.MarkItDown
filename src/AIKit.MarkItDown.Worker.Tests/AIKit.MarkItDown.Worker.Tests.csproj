@@ -22,13 +22,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AIKit.MarkItDown.Worker\AIKit.MarkItDown.Worker.csproj" />
+    <ProjectReference Include="..\AIKit.MarkItDown.Worker\AIKit.MarkItDown.Worker.csproj" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="tst-text.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <!-- Link shared test files (copies to output for runtime access) -->
+    <Content Include="..\TestShared\files\**" Link="files\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Link shared scripts (no copy to output, as they're likely build-time only) -->
+    <None Include="..\TestShared\scripts\**" Link="scripts\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>
