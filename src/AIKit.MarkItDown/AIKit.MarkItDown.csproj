@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>AIKit.MarkItDown</PackageId>
     <Version>1.0.0</Version>
-    <Authors>YourName</Authors>
+    <Authors>Admir Durmishi</Authors>
     <Description>C# wrapper for markitdown library</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>markdown conversion pdf docx</PackageTags>
@@ -14,6 +14,10 @@
     <ExeSuffix Condition="$([MSBuild]::IsOSPlatform('Windows'))">.exe</ExeSuffix>
     <ExeSuffix Condition="!$([MSBuild]::IsOSPlatform('Windows'))"></ExeSuffix>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIKit.MarkItDown.Worker\AIKit.MarkItDown.Worker.csproj" Private="false" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
   <Target Name="CopyWorker" AfterTargets="Build">
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker$(ExeSuffix)" DestinationFolder="$(OutputPath)" />
