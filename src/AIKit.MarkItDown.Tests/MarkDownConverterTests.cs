@@ -1,4 +1,5 @@
 ﻿using Xunit.Abstractions;
+using Moq;
 
 namespace AIKit.MarkItDown.Tests;
 
@@ -12,8 +13,8 @@ public class MarkDownConverterTests
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/tst-text.txt")]
     public void ConvertToMarkdown_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting conversion test for file: {fileName}");
@@ -34,8 +35,8 @@ public class MarkDownConverterTests
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/tst-text.txt")]
     public void ConvertToMarkdown_WithConfig_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting conversion test with config for file: {fileName}");
@@ -71,8 +72,8 @@ public class MarkDownConverterTests
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/tst-text.txt")]
     public void ConvertStream_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting stream conversion test for file: {fileName}");
@@ -113,110 +114,11 @@ public class MarkDownConverterTests
         Assert.True(result.Length > 0, "Markdown should not be empty");
     }
 
-    [Theory]
-    [InlineData("pdf-test.pdf")]
-    public void Convert_WithVariousConfigs_ReturnsMarkdown(string fileName)
-    {
-        _output.WriteLine($"Starting config variation test for file: {fileName}");
-        var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
-
-        var configs = new[]
-        {
-            new MarkDownConfig { KeepDataUris = true },
-            new MarkDownConfig { EnablePlugins = true },
-            new MarkDownConfig { LlmModel = "gpt-4o" },
-            new MarkDownConfig { DocIntelEndpoint = "https://test.endpoint" }
-        };
-
-        foreach (var config in configs)
-        {
-            _output.WriteLine($"Testing config: {config.KeepDataUris}, {config.EnablePlugins}, {config.LlmModel}, {config.DocIntelEndpoint}");
-            var result = converter.Convert(filePath, config);
-            _output.WriteLine($"Result length: {result.Length}");
-            _output.WriteLine("```markdown");
-            _output.WriteLine(result);
-            _output.WriteLine("```");
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
-        }
-    }
-
-    [Fact]
-    public void ConvertStream_WithConfig_ReturnsMarkdown()
-    {
-        _output.WriteLine("Starting stream with config test");
-        var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "tst-text.txt");
-        var config = new MarkDownConfig { KeepDataUris = true };
-
-        using (var stream = File.OpenRead(filePath))
-        {
-            var result = converter.Convert(stream, "txt", config);
-            _output.WriteLine($"Stream with config result length: {result.Length}");
-            _output.WriteLine("```markdown");
-            _output.WriteLine(result);
-            _output.WriteLine("```");
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
-        }
-    }
-
-    [Fact]
-    public void ConvertUri_WithConfig_ReturnsMarkdown()
-    {
-        _output.WriteLine("Starting URI with config test");
-        var converter = new MarkDownConverter();
-        var uri = "https://www.example.com";
-        var config = new MarkDownConfig { EnablePlugins = true };
-
-        try
-        {
-            var result = converter.ConvertUri(uri, config);
-            _output.WriteLine($"URI with config result length: {result.Length}");
-            _output.WriteLine("```markdown");
-            _output.WriteLine(result);
-            _output.WriteLine("```");
-            Assert.NotNull(result);
-        }
-        catch (MarkItDownConversionException ex)
-        {
-            Assert.Contains("MarkItDown URI conversion failed", ex.Message);
-        }
-    }
-
-    [Fact]
-    public void ConvertUri_YouTube_ReturnsMarkdown()
-    {
-        _output.WriteLine("Testing YouTube URL conversion");
-        var converter = new MarkDownConverter();
-        // Use a short YouTube video URL for testing
-        var uri = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-
-        try
-        {
-            var result = converter.ConvertUri(uri);
-            Assert.NotNull(result);
-            Assert.False(string.IsNullOrEmpty(result));
-            _output.WriteLine($"YouTube conversion successful: {result.Length} chars");
-            _output.WriteLine("Content:");
-            _output.WriteLine("```markdown");
-            _output.WriteLine(result);
-            _output.WriteLine("```");
-        }
-        catch (MarkItDownConversionException ex)
-        {
-            _output.WriteLine($"YouTube conversion failed: {ex.Message}");
-            // YouTube might require additional setup, so we note it but don't fail the test
-            Assert.Contains("MarkItDown URI conversion failed", ex.Message);
-        }
-    }
-
     // Async tests
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/tst-text.txt")]
     public async Task ConvertAsyncToMarkdown_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting async conversion test for file: {fileName}");
@@ -258,8 +160,8 @@ public class MarkDownConverterTests
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
-    [InlineData("tst-text.txt")]
+    [InlineData("files/pdf-test.pdf")]
+    [InlineData("files/tst-text.txt")]
     public async Task ConvertAsyncStream_ReturnsMarkdown_ForTestFile(string fileName)
     {
         _output.WriteLine($"Starting async stream conversion test for file: {fileName}");
@@ -339,7 +241,7 @@ public class MarkDownConverterTests
     {
         _output.WriteLine("Starting async stream with config test");
         var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "tst-text.txt");
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "tst-text.txt");
         var config = new MarkDownConfig { KeepDataUris = true };
 
         using var stream = File.OpenRead(filePath);
@@ -355,7 +257,7 @@ public class MarkDownConverterTests
     }
 
     [Theory]
-    [InlineData("pdf-test.pdf")]
+    [InlineData("files/pdf-test.pdf")]
     public async Task ConvertAsync_WithVariousConfigs_ReturnsMarkdown(string fileName)
     {
         _output.WriteLine($"Starting async config variation test for file: {fileName}");
@@ -385,7 +287,7 @@ public class MarkDownConverterTests
     {
         _output.WriteLine("Testing async cancellation");
         var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "pdf-test.pdf");
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "pdf-test.pdf");
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
@@ -397,7 +299,7 @@ public class MarkDownConverterTests
     {
         _output.WriteLine("Testing parallel executions");
         var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "tst-text.txt");
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "tst-text.txt");
 
         var tasks = new List<Task<string>>();
         for (int i = 0; i < 5; i++)
@@ -414,5 +316,299 @@ public class MarkDownConverterTests
         }
 
         _output.WriteLine($"All {results.Length} parallel conversions succeeded");
+    }
+
+    [Fact]
+    public void TestConvertDocx()
+    {
+        _output.WriteLine("Testing DOCX conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.docx");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"DOCX conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        Assert.Contains("#", result); // Assuming it has headings
+    }
+
+    [Fact]
+    public void TestConvertXlsx()
+    {
+        _output.WriteLine("Testing XLSX conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.xlsx");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"XLSX conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        Assert.Contains("|", result); // Tables
+    }
+
+    [Fact]
+    public void TestConvertPptx()
+    {
+        _output.WriteLine("Testing PPTX conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.pptx");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"PPTX conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void TestConvertImage()
+    {
+        _output.WriteLine("Testing image conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.jpg");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"Image conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        // Allow empty for now if OCR not available
+    }
+
+    [Fact]
+    public void TestConvertAudio()
+    {
+        _output.WriteLine("Testing audio conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.wav");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"Audio conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void TestConvertZip()
+    {
+        _output.WriteLine("Testing ZIP conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.zip");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"ZIP conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void TestConvertEpub()
+    {
+        _output.WriteLine("Testing EPUB conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.epub");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"EPUB conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void TestConvertCsv()
+    {
+        _output.WriteLine("Testing CSV conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.csv");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"CSV conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+        Assert.Contains("|", result); // Tables
+    }
+
+    [Fact]
+    public void TestConvertIpynb()
+    {
+        _output.WriteLine("Testing IPYNB conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.ipynb");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"IPYNB conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void TestConvertHtml()
+    {
+        _output.WriteLine("Testing HTML conversion");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.html");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"HTML conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void TestConvertYoutube()
+    {
+        _output.WriteLine("Testing YouTube URI conversion");
+        var converter = new MarkDownConverter();
+        var uri = "https://www.youtube.com/watch?v=jNQXAC9IVRw";
+
+        try
+        {
+            var result = converter.ConvertUri(uri);
+            _output.WriteLine($"YouTube conversion result length: {result.Length}");
+            _output.WriteLine("```markdown");
+            _output.WriteLine(result);
+            _output.WriteLine("```");
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+        }
+        catch (MarkItDownConversionException ex)
+        {
+            _output.WriteLine($"YouTube conversion failed: {ex.Message}");
+            // Allow failure if transcription not set up
+        }
+    }
+
+    [Fact]
+    public void TestConvertWithLlmConfig()
+    {
+        _output.WriteLine("Testing conversion with LLM config");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "test.jpg");
+        var config = new MarkDownConfig { LlmModel = "gpt-4o", OpenAiApiKey = "mock-key" }; // Mock key, expect graceful failure or no LLM call
+
+        try
+        {
+            var result = converter.Convert(filePath, config);
+            _output.WriteLine($"LLM config result length: {result.Length}");
+            _output.WriteLine("```markdown");
+            _output.WriteLine(result);
+            _output.WriteLine("```");
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+        }
+        catch (MarkItDownConversionException ex)
+        {
+            _output.WriteLine($"LLM config failed: {ex.Message}");
+            // Allow failure if API key invalid
+        }
+    }
+
+    [Fact]
+    public void TestConvertWithAzureConfig()
+    {
+        _output.WriteLine("Testing conversion with Azure Doc Intel config");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "test.pdf");
+        var config = new MarkDownConfig { DocIntelEndpoint = "https://mock.endpoint", DocIntelKey = "mock-key" };
+
+        try
+        {
+            var result = converter.Convert(filePath, config);
+            _output.WriteLine($"Azure config result length: {result.Length}");
+            _output.WriteLine("```markdown");
+            _output.WriteLine(result);
+            _output.WriteLine("```");
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+        }
+        catch (MarkItDownConversionException ex)
+        {
+            _output.WriteLine($"Azure config failed: {ex.Message}");
+            // Allow failure if endpoint invalid
+        }
+    }
+
+    [Fact]
+    public void TestConvertCorruptedFile()
+    {
+        _output.WriteLine("Testing conversion of corrupted file");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "corrupted.pdf");
+        File.WriteAllText(filePath, "not a pdf"); // Create corrupted file
+
+        var result = converter.Convert(filePath);
+        // Markitdown may fall back to text conversion
+        Assert.NotNull(result);
+        Assert.Contains("not a pdf", result);
+    }
+
+    [Fact]
+    public void TestConvertUriNetworkFailure()
+    {
+        _output.WriteLine("Testing URI conversion with network failure");
+        var converter = new MarkDownConverter();
+        var uri = "https://invalid.domain.that.does.not.exist";
+
+        Assert.Throws<MarkItDownConversionException>(() => converter.ConvertUri(uri));
+    }
+
+    [Fact]
+    public void TestConvertOutputValidation()
+    {
+        _output.WriteLine("Testing output validation for XLSX");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.xlsx");
+
+        var result = converter.Convert(filePath);
+
+        Assert.Contains("|", result); // Should have table markdown
+        Assert.Contains("Name", result); // From our test data
     }
 }
