@@ -65,13 +65,55 @@ public static class PythonHelper
         }
         else
         {
-            // On Linux/macOS, Python library is libpythonXY.so in LIBDIR
-            string libDir = ProcessHelper.Run(pythonExe, "-c \"import sysconfig; print(sysconfig.get_config_var('LIBDIR'))\"");
+            // On Linux/macOS, Python library is libpythonXY.so
             string version = ProcessHelper.Run(pythonExe, "-c \"import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')\"");
-            if (string.IsNullOrEmpty(libDir) || string.IsNullOrEmpty(version))
+            if (string.IsNullOrEmpty(version))
                 return null;
             string dll = $"libpython{version}.so";
-            return Path.Combine(libDir, dll);
+
+            // Try LIBDIR first
+            string libDir = ProcessHelper.Run(pythonExe, "-c \"import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')\"");
+            if (!string.IsNullOrEmpty(libDir))
+            {
+                string path = Path.Combine(libDir, dll);
+                if (File.Exists(path))
+                    return path;
+            }
+
+            // Fallback: common library directories
+            var commonLibDirs = new[] { "/usr/lib", "/usr/lib64", "/usr/local/lib", "/usr/lib/x86_64-linux-gnu", "/usr/lib/aarch64-linux-gnu" };
+            foreach (var dir in commonLibDirs)
+            {
+                string path = Path.Combine(dir, dll);
+                if (File.Exists(path))
+                    return path;
+            }
+
+            // Last resort: try to find via ldd on python executable
+            string pythonPath = ProcessHelper.Run(pythonExe, "-c \"import sys; print(sys.executable)\"");
+            if (!string.IsNullOrEmpty(pythonPath) && File.Exists(pythonPath))
+            {
+                string lddOutput = ProcessHelper.Run("ldd", $"\"{pythonPath}\"");
+                if (!string.IsNullOrEmpty(lddOutput))
+                {
+                    var lines = lddOutput.Split('\n');
+                    foreach (var line in lines)
+                    {
+                        if (line.Contains("libpython") && line.Contains(".so"))
+                        {
+                            var parts = line.Split("=>");
+                            if (parts.Length > 1)
+                            {
+                                var libPath = parts[1].Trim().Split(' ')[0];
+                                if (File.Exists(libPath))
+                                    return libPath;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 

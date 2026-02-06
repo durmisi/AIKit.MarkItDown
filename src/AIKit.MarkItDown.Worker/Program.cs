@@ -1,5 +1,6 @@
 using Python.Runtime;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using AIKit.MarkItDown.Worker;
 
@@ -22,6 +23,10 @@ try
     var dllPath = PythonHelper.GetPythonDllPath(pythonExe)
         ?? throw new Exception("Python DLL not found");
     Runtime.PythonDLL = dllPath;
+    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    {
+        Environment.SetEnvironmentVariable("PYTHONNET_RUNTIME", "coreclr");
+    }
     PythonEngine.Initialize();
     PythonEngine.BeginAllowThreads();
 
@@ -29,7 +34,7 @@ try
     using (Py.GIL())
     {
         PythonHelper.DisablePythonLogging();
-        dynamic md_module = Py.Import("markitdown.markitdown");
+        dynamic md_module = Py.Import("markitdown");
         dynamic MarkItDown = md_module.GetAttr("MarkItDown");
         dynamic md = MarkItDown();
 
