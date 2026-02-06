@@ -1,6 +1,7 @@
 using Python.Runtime;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace AIKit.MarkItDown.Worker;
 
@@ -14,12 +15,21 @@ public static class PythonHelper
 
     /// <summary>
     /// Finds the Python executable on the system.
-    /// Tries PATH commands first, then common installation paths.
+    /// Tries venv python first, then PATH commands, then common installation paths.
     /// </summary>
     /// <returns>The path to the Python executable, or null if not found.</returns>
     public static string? GetPythonExecutable()
     {
-        // First try commands in PATH
+        // First try venv python relative to project root
+        string assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string projectRoot = Path.GetFullPath(Path.Combine(assemblyDir, "..", "..", ".."));
+        string venvPython = OperatingSystem.IsWindows() 
+            ? Path.Combine(projectRoot, ".venv", "Scripts", "python.exe") 
+            : Path.Combine(projectRoot, ".venv", "bin", "python3");
+        if (File.Exists(venvPython) && ProcessHelper.IsCommandAvailable(venvPython, "--version"))
+            return venvPython;
+
+        // Then try commands in PATH
         foreach (var cmd in new[] { "python", "python3", "py" })
             if (ProcessHelper.IsCommandAvailable(cmd, "--version"))
                 return ProcessHelper.Run(cmd, "-c \"import sys; print(sys.executable)\"");
