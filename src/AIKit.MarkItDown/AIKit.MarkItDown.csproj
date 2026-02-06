@@ -11,10 +11,12 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>markdown conversion pdf docx</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <ExeSuffix Condition="'$(OS)' == 'Windows_NT'">.exe</ExeSuffix>
+    <ExeSuffix Condition="'$(OS)' != 'Windows_NT'"></ExeSuffix>
   </PropertyGroup>
 
   <Target Name="CopyWorker" AfterTargets="Build">
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker$(ExeSuffix)" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFolder="$(OutputPath)" />
@@ -22,7 +24,7 @@
 
   <Target Name="CopyWorkerToTools" BeforeTargets="GenerateNuspec">
     <MakeDir Directories="$(ProjectDir)tools" />
-    <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker.exe" DestinationFolder="$(ProjectDir)tools" />
+    <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker$(ExeSuffix)" DestinationFolder="$(ProjectDir)tools" />
     <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker.dll" DestinationFolder="$(ProjectDir)tools" />
     <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(ProjectDir)tools" />
     <Copy SourceFiles="$(OutputPath)Python.Runtime.dll" DestinationFolder="$(ProjectDir)tools" />
