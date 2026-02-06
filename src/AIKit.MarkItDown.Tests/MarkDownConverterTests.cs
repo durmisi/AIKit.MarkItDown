@@ -63,11 +63,11 @@ public class MarkDownConverterTests
         var nonExistentFile = "nonexistent.pdf";
         _output.WriteLine($"Attempting to convert non-existent file: {nonExistentFile}");
 
-        var exception = Assert.Throws<MarkItDownConversionException>(() => converter.Convert(nonExistentFile));
+        var exception = Assert.Throws<AggregateException>(() => converter.Convert(nonExistentFile));
         _output.WriteLine($"Exception type: {exception.GetType().Name}");
         _output.WriteLine($"Exception message: {exception.Message}");
-        // The exception could be from installation failure or conversion failure
-        Assert.Contains("File not found", exception.Message);
+        Assert.IsType<MarkItDownConversionException>(exception.InnerException);
+        Assert.Contains("File not found", exception.InnerException.Message);
     }
 
     [Theory]
