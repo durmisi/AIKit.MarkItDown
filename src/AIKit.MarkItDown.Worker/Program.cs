@@ -34,13 +34,15 @@ try
     {
         PythonHelper.DisablePythonLogging();
         dynamic markitdown = Py.Import("markitdown");
-        dynamic md = markitdown.MarkItDown();
+        dynamic MarkItDown = markitdown.GetAttr("MarkItDown");
+        dynamic md = MarkItDown();
 
         // Create Python objects from string configs
         if (input.Kwargs.TryGetValue("openai_api_key", out var openaiValue) && openaiValue is string apiKey)
         {
             dynamic openai = Py.Import("openai");
-            dynamic client = openai.OpenAI(api_key: apiKey);
+            dynamic OpenAI = openai.GetAttr("OpenAI");
+            dynamic client = OpenAI(api_key: apiKey);
             input.Kwargs["llm_client"] = client;
             input.Kwargs.Remove("openai_api_key");
         }
@@ -48,7 +50,8 @@ try
         if (input.Kwargs.TryGetValue("docintel_key", out var docintelValue) && docintelValue is string key)
         {
             dynamic azure_credentials = Py.Import("azure.core.credentials");
-            dynamic credential = azure_credentials.AzureKeyCredential(key);
+            dynamic AzureKeyCredential = azure_credentials.GetAttr("AzureKeyCredential");
+            dynamic credential = AzureKeyCredential(key);
             input.Kwargs["docintel_credential"] = credential;
             input.Kwargs.Remove("docintel_key");
         }
