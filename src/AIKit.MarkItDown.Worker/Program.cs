@@ -34,7 +34,7 @@ try
     using (Py.GIL())
     {
         PythonHelper.DisablePythonLogging();
-        dynamic md_module = Py.Import("markitdown");
+        dynamic md_module = Py.Import("markitdown._markitdown");
         dynamic MarkItDown = md_module.GetAttr("MarkItDown");
         dynamic md = MarkItDown();
 
