@@ -3,15 +3,29 @@ using Moq;
 
 namespace AIKit.MarkItDown.Tests;
 
+/// <summary>
+/// Unit tests for the <see cref="MarkDownConverter"/> class.
+/// </summary>
 public class MarkDownConverterTests
 {
+    /// <summary>
+    /// Output helper for logging test results.
+    /// </summary>
     private readonly ITestOutputHelper _output;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MarkDownConverterTests"/> class.
+    /// </summary>
+    /// <param name="output">The test output helper.</param>
     public MarkDownConverterTests(ITestOutputHelper output)
     {
         _output = output;
     }
 
+    /// <summary>
+    /// Tests that converting test files to Markdown returns valid Markdown.
+    /// </summary>
+    /// <param name="fileName">The name of the test file to convert.</param>
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
@@ -37,6 +51,10 @@ public class MarkDownConverterTests
         // Add more assertions based on expected Markdown content, e.g., Assert.Contains("#", result);
     }
 
+    /// <summary>
+    /// Tests that converting test files with configuration returns valid Markdown.
+    /// </summary>
+    /// <param name="fileName">The name of the test file to convert.</param>
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
@@ -61,6 +79,9 @@ public class MarkDownConverterTests
         Assert.NotEmpty(result);
     }
 
+    /// <summary>
+    /// Tests that converting a non-existent file throws an exception.
+    /// </summary>
     [Fact]
     public void ConvertToMarkdown_ThrowsException_WhenFileDoesNotExist()
     {
@@ -76,6 +97,9 @@ public class MarkDownConverterTests
         Assert.Contains("File not found", exception.InnerException.Message);
     }
 
+    /// <summary>
+    /// Tests that the constructor with default config works correctly.
+    /// </summary>
     [Fact]
     public void Constructor_WithDefaultConfig_Works()
     {
@@ -93,6 +117,9 @@ public class MarkDownConverterTests
         Assert.NotEmpty(result);
     }
 
+    /// <summary>
+    /// Tests that the constructor with override config works correctly.
+    /// </summary>
     [Fact]
     public void Constructor_WithOverrideConfig_Works()
     {

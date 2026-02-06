@@ -6,23 +6,64 @@ using Xunit.Abstractions;
 
 namespace AIKit.MarkItDown.Client.Tests;
 
+/// <summary>
+/// End-to-end tests for the MarkItDown client against a running server.
+/// </summary>
 public class E2eTests : IAsyncLifetime
 {
+    /// <summary>
+    /// Output helper for logging test results.
+    /// </summary>
     private readonly ITestOutputHelper _output;
+
+    /// <summary>
+    /// The Uvicorn process running the server.
+    /// </summary>
     private Process? _uvicornProcess;
+
+    /// <summary>
+    /// The HTTP client for making requests.
+    /// </summary>
     private HttpClient? _httpClient;
+
+    /// <summary>
+    /// The MarkItDown client instance.
+    /// </summary>
     private MarkItDownClient? _client;
 
+    /// <summary>
+    /// The URL of the test server.
+    /// </summary>
     private const string ServerUrl = "http://localhost:8000";
+
+    /// <summary>
+    /// The health endpoint for checking server status.
+    /// </summary>
     private const string HealthEndpoint = "/health";
+
+    /// <summary>
+    /// The port on which the server runs.
+    /// </summary>
     private const int ServerPort = 8000;
+
+    /// <summary>
+    /// Maximum number of retries for server readiness.
+    /// </summary>
     private const int MaxRetries = 30;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="E2eTests"/> class.
+    /// </summary>
+    /// <param name="output">The test output helper.</param>
     public E2eTests(ITestOutputHelper output)
     {
         _output = output;
     }
 
+    /// <summary>
+    /// Initializes the test environment by starting the server and client.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
         await StartServerAsync();
@@ -30,12 +71,20 @@ public class E2eTests : IAsyncLifetime
         InitializeClient();
     }
 
+    /// <summary>
+    /// Disposes the test environment by stopping the server and disposing the client.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task DisposeAsync()
     {
         await StopServerAsync();
         _httpClient?.Dispose();
     }
 
+    /// <summary>
+    /// Tests converting various file types to Markdown using the client.
+    /// </summary>
+    /// <param name="fileName">The name of the test file to convert.</param>
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/test.csv")]

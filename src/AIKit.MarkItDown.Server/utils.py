@@ -1,3 +1,5 @@
+"""Utility functions for configuration validation and kwargs building."""
+
 import openai
 from models import MarkDownConfig
 from typing import Dict, Any
@@ -5,22 +7,33 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def validate_config(config: MarkDownConfig):
-    """Validate the MarkDownConfig for required pairs."""
+    """Validate the MarkDownConfig for required pairs.
+
+    Ensures that related config fields are provided together.
+
+    Args:
+        config: The MarkDownConfig object to validate.
+
+    Raises:
+        ValueError: If validation fails.
+    """
     if (config.docintel_endpoint and not config.docintel_key) or (config.docintel_key and not config.docintel_endpoint):
         raise ValueError("Both docintel_endpoint and docintel_key must be provided together.")
     if config.llm_api_key and not config.llm_model:
         raise ValueError("Both llm_model and llm_api_key must be provided together.")
 
+
 def build_conversion_kwargs(config: MarkDownConfig) -> Dict[str, Any]:
     """Build kwargs dict from MarkDownConfig for markitdown conversion.
-    
+
     Args:
         config: The MarkDownConfig object containing conversion settings.
-        
+
     Returns:
         Dict of kwargs to pass to markitdown conversion methods.
-        
+
     Raises:
         ValueError: If config validation fails.
     """
