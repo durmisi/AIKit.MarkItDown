@@ -22,10 +22,6 @@ try
     var dllPath = PythonHelper.GetPythonDllPath(pythonExe)
         ?? throw new Exception("Python DLL not found");
     Runtime.PythonDLL = dllPath;
-    var pythonHome = Path.GetDirectoryName(pythonExe)
-        ?? throw new Exception("Failed to determine Python home directory");
-    var pythonRoot = Directory.GetParent(pythonHome)?.FullName ?? pythonHome;
-    PythonEngine.PythonHome = pythonRoot;
     PythonEngine.Initialize();
     PythonEngine.BeginAllowThreads();
 
@@ -33,8 +29,8 @@ try
     using (Py.GIL())
     {
         PythonHelper.DisablePythonLogging();
-        dynamic markitdown = Py.Import("markitdown");
-        dynamic MarkItDown = markitdown.GetAttr("MarkItDown");
+        dynamic md_module = Py.Import("markitdown.markitdown");
+        dynamic MarkItDown = md_module.GetAttr("MarkItDown");
         dynamic md = MarkItDown();
 
         // Create Python objects from string configs
