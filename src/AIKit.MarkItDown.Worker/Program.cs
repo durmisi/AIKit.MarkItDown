@@ -30,6 +30,23 @@ public class Program
                 dynamic markitdown = Py.Import("markitdown");
                 dynamic md = markitdown.MarkItDown();
 
+                // Create Python objects from string configs
+                if (input.Kwargs.ContainsKey("openai_api_key") && input.Kwargs["openai_api_key"] is string apiKey)
+                {
+                    dynamic openai = Py.Import("openai");
+                    dynamic client = openai.OpenAI(api_key: apiKey);
+                    input.Kwargs["llm_client"] = client;
+                    input.Kwargs.Remove("openai_api_key");
+                }
+
+                if (input.Kwargs.ContainsKey("docintel_key") && input.Kwargs["docintel_key"] is string key)
+                {
+                    dynamic azure_credentials = Py.Import("azure.core.credentials");
+                    dynamic credential = azure_credentials.AzureKeyCredential(key);
+                    input.Kwargs["docintel_credential"] = credential;
+                    input.Kwargs.Remove("docintel_key");
+                }
+
                 var kwargs = BuildKwargs(input.Kwargs);
 
                 if (input.Type == "file")
