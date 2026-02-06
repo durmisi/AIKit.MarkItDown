@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <ExeSuffix Condition="$([MSBuild]::IsOSPlatform('Windows'))">.exe</ExeSuffix>
+    <ExeSuffix Condition="!$([MSBuild]::IsOSPlatform('Windows'))"></ExeSuffix>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,7 +32,7 @@
   </ItemGroup>
 
   <Target Name="CopyWorkerToTestOutput" AfterTargets="Build">
-    <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker$(ExeSuffix)" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFolder="$(OutputPath)" />
