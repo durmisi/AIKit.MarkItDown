@@ -24,7 +24,8 @@ try
     Runtime.PythonDLL = dllPath;
     var pythonHome = Path.GetDirectoryName(pythonExe)
         ?? throw new Exception("Failed to determine Python home directory");
-    PythonEngine.PythonHome = pythonHome;
+    var pythonRoot = Directory.GetParent(pythonHome)?.FullName ?? pythonHome;
+    PythonEngine.PythonHome = pythonRoot;
     PythonEngine.Initialize();
     PythonEngine.BeginAllowThreads();
 

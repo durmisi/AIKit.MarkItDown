@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Runtime.InteropServices;
 
 namespace AIKit.MarkItDown;
 
@@ -38,7 +39,8 @@ public class MarkDownConverter
     static MarkDownConverter()
     {
         var assemblyDir = Path.GetDirectoryName(typeof(MarkDownConverter).Assembly.Location)!;
-        WorkerExePath = Path.Combine(assemblyDir, "AIKit.MarkItDown.Worker.exe");
+        var exeSuffix = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : "";
+        WorkerExePath = Path.Combine(assemblyDir, "AIKit.MarkItDown.Worker" + exeSuffix);
         if (!File.Exists(WorkerExePath))
             throw new InvalidOperationException("Worker exe not found.");
     }
