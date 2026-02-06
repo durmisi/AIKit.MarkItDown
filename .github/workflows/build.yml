@@ -32,7 +32,9 @@ jobs:
         run: |
           python -m venv .venv
           . .venv/bin/activate
-          pwsh src/AIKit.MarkItDown/install.ps1
+          pip install markitdown[all]
+          pip install openai
+          pip install azure-ai-documentintelligence
 
       - name: Restore dependencies
         run: dotnet restore src/AIKit.MarkItDown.slnx
