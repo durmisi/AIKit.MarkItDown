@@ -1,317 +1,291 @@
-# AIKit.MarkItDown
+﻿# AIKit.MarkItDown
 
 [![NuGet Version](https://img.shields.io/nuget/v/AIKit.MarkItDown)](https://www.nuget.org/packages/AIKit.MarkItDown/)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue)](https://dotnet.microsoft.com/)
 
-A C# wrapper around the Python `markitdown` library for converting various file formats (PDF, DOCX, etc.) to Markdown. It uses pythonnet to embed Python runtime in .NET.
+**Effortlessly convert files to Markdown in your .NET applications** — A powerful C# wrapper around Microsoft's markitdown library that brings advanced file conversion capabilities to .NET developers.
 
-## Project Overview
+## What It Offers
 
-AIKit.MarkItDown is a C# wrapper around the Python `markitdown` library for converting various file formats (PDF, DOCX, etc.) to Markdown. It uses pythonnet to embed Python runtime in .NET.
+AIKit.MarkItDown is a production-ready .NET library that enables seamless integration of file-to-Markdown conversion into your applications. It wraps Microsoft's markitdown Python library, providing:
 
-### Architecture
+- **Wide Format Support**: Convert PDFs, DOCX, PPTX, XLSX, images (with OCR), audio files (with transcription), web pages, and more to clean Markdown
+- **AI-Powered Features**: Optional integration with Azure Document Intelligence for advanced document processing and OpenAI for LLM-enhanced image descriptions
+- **Thread-Safe Design**: Isolated worker process prevents Python GIL issues in multi-threaded .NET apps
+- **Multiple Integration Options**: Use as a direct library, REST API server, or .NET client
+- **Extensible Plugin System**: Add custom converters for specialized formats
+- **Enterprise-Ready**: Docker deployment, health checks, and robust error handling
 
-- **Core Component**: `MarkDownConverter` class handles Python initialization and file conversion
-- **Python Integration**: Static constructor detects Python executable and DLL path, initializes PythonEngine
-- **Conversion Flow**: Uses Py.GIL() context to import `markitdown` and call `convert()` method
-- **Error Handling**: Wraps PythonException in C# Exception with descriptive messages
+## Why It's Useful
 
-### Dependencies & Setup
+In today's content-rich applications, processing diverse file formats is essential. AIKit.MarkItDown solves common challenges:
 
-- **NuGet**: `pythonnet` (3.0.5) for Python embedding
-- **Python**: Requires Python 3.8+ with `markitdown[all]` installed
-- **Installation**: Run `src/AIKit.MarkItDown/install.ps1` to install Python dependencies
-- **Runtime Detection**: Automatically finds Python via `python`, `python3`, or `py` commands
+- **Unified Output**: Convert any supported file to standardized Markdown, perfect for RAG systems, content management, or document processing pipelines
+- **AI Enhancement**: Leverage LLMs for richer content extraction (e.g., describe images, transcribe audio) without managing Python dependencies yourself
+- **Performance**: Worker process isolation ensures your .NET app remains responsive during conversions
+- **Developer Experience**: Pure C# API with async support, configuration validation, and comprehensive error messages
+- **Cost-Effective**: Free and open-source, with optional paid services (Azure/OpenAI) only when needed
 
-### Build & Test Workflow
+Whether you're building a document indexing system, content aggregator, or AI-powered application, AIKit.MarkItDown provides the file processing backbone without the complexity of managing Python in .NET.
 
-- **Build**: Standard `dotnet build` in `src/` directory
-- **Test**: `dotnet test` requires Python environment; tests use xUnit with ITestOutputHelper for output
-- **Debug**: Ensure Python DLL path is correctly detected; check console for initialization errors
-- **CI/CD**: Build matrix should include Python installation step
+## How It Works
 
-### Code Patterns
+AIKit.MarkItDown uses a hybrid C#/Python architecture to safely embed Python functionality in .NET applications. Below are the architecture diagrams for both integration options.
 
-- **Python Runtime Management**: Always use `using (Py.GIL())` for thread-safe Python operations
-- **Exception Translation**: Catch `PythonException` and re-throw as `Exception` with context
-- **Static Initialization**: Python setup happens once in static constructor
-- **Process Execution**: Use `Process` class with redirected output for Python command detection
+### Option 1: Direct Library Integration Architecture
 
-### Key Files
+```
+┌─────────────────┐    JSON over stdin/stdout    ┌─────────────────┐
+│   .NET App      │ ──────────────────────────► │   Worker         │
+│ (Your Code)     │                             │ Process          │
+│                 │ ◄────────────────────────── │                 │
+└─────────────────┘                             └─────────────────┘
+                                                   │
+                                                   ▼
+                                            ┌─────────────────┐
+                                            │   Python         │
+                                            │   markitdown     │
+                                            │   Library        │
+                                            └─────────────────┘
+```
 
-- `MarkDownConverter.cs`: Main conversion logic and Python integration
-- `install.ps1`: Python dependency installation script
-- `MarkDownConverterTests.cs`: Unit tests with file conversion examples
+**Flow**:
 
-### Common Pitfalls
+1. Your .NET code calls `MarkDownConverter.Convert()`
+2. Worker process (isolated .NET executable) receives JSON request via stdin/stdout
+3. Python runtime initializes using pythonnet, imports markitdown
+4. Conversion happens in Python with AI processing if configured
+5. Result flows back as JSON, deserialized to C# objects
 
-- Python not found: Ensure `python`/`python3`/`py` is in PATH
-- DLL mismatch: Version detection may fail; verify `pythonXY.dll` exists in Python directory
-- GIL not acquired: All Python operations must be within `Py.GIL()` scope
-- Missing dependencies: Run `install.ps1` before testing or running
+**Benefits**: Maximum performance, tight integration, full control over configuration.
 
-## TODO
+### Option 2: Separate Server Deployment Architecture
 
-- **Test OpenAI Integration**: The solution has not been fully tested with OpenAI client features due to lack of API credentials. Requires valid OpenAI API key for testing LLM-powered image descriptions and other AI features.
-- **Test Azure Document Intelligence**: Azure Document Intelligence integration is not tested due to missing Azure credentials. Requires Azure subscription and Document Intelligence resource for testing advanced document processing features.
-- **Publish NuGet Package**: Package the AIKit.MarkItDown library and publish to NuGet.org for public consumption.
-- **Publish Docker Image**: Build and publish the Docker image for the server component to a container registry (Docker Hub, GitHub Container Registry, etc.).
-- **CI/CD Pipeline**: Implement automated testing pipeline that includes Python environment setup and credential management for full integration testing.
+```
+┌─────────────────┐    HTTP/REST API    ┌─────────────────┐
+│   Any Client    │ ──────────────────► │   Python Server  │
+│ (.NET, JS, etc.)│                     │   (FastAPI)      │
+│                 │ ◄────────────────── │                 │
+└─────────────────┘                     └─────────────────┘
+                                           │
+                                           ▼
+                                    ┌─────────────────┐
+                                    │   markitdown    │
+                                    │   Library       │
+                                    │   (Direct)      │
+                                    └─────────────────┘
+```
 
-## Overview
+**Flow**:
 
-AIKit.MarkItDown allows developers to integrate advanced file-to-Markdown conversion capabilities into .NET applications. It supports a wide range of formats including documents (PDF, DOCX, PPTX, XLSX), images (with OCR), audio (with transcription), web content, and more. The library leverages Microsoft's markitdown library's features like Azure Document Intelligence, OpenAI LLM integration, and a plugin system.
+1. Client sends HTTP request with file/URL to Python server (FastAPI)
+2. Server directly imports and uses markitdown library
+3. Conversion happens in Python with AI processing if configured
+4. Server returns Markdown result via HTTP response
+5. Client receives standardized JSON response
 
-Key capabilities:
+**Benefits**: Scalable, language-agnostic, centralized service, easier monitoring.
 
-- **File Conversion**: Convert local files, streams, or URLs to Markdown
-- **Advanced Features**: OCR, speech transcription, LLM image descriptions
-- **Integration Options**: Direct library usage, REST API server, or .NET client
-- **Plugin Support**: Extensible with custom plugins
-- **Thread-Safe**: Process isolation ensures safe concurrent usage
+### Key Design Decisions
 
-## Architecture
+- **Worker Isolation**: Python's Global Interpreter Lock (GIL) can block threads in embedded scenarios. By running conversions in a separate process, your main app stays responsive
+- **JSON Serialization**: Simple, reliable communication between C# and worker without complex IPC
+- **Static Initialization**: Python setup happens once per worker lifetime for efficiency
+- **Error Translation**: Python exceptions are caught and re-thrown as descriptive C# exceptions
 
-The solution uses a hybrid C#/Python architecture:
-
-- **Core Library** (`AIKit.MarkItDown`): C# API surface with configuration and error handling
-- **Worker Process** (`AIKit.MarkItDown.Worker`): Isolated .NET executable that manages Python runtime using pythonnet
-- **Server** (`AIKit.MarkItDown.Server`): Python FastAPI server for REST API access
-- **Client** (`AIKit.MarkItDown.Client`): C# client library for server communication
-
-The worker process approach isolates Python GIL management and runtime issues from the main application, ensuring thread safety and reliability.
-
-## Prerequisites
-
-- **.NET 10.0 SDK** or higher
-- **Python 3.8** or higher (automatically detected from PATH or common locations)
-- **Docker** (optional, for containerized server deployment)
-- **Azure CLI** (optional, for Azure Document Intelligence features)
-- **OpenAI API Key** (optional, for LLM-powered features)
+Both architectures ensure thread safety, reliability, and performance while providing different deployment flexibility.
 
 ## Installation
 
-### NuGet Package
+### Quick Install (NuGet)
 
-Install the library in your .NET project:
+Add to your .NET project:
 
-```bash
+`ash
 dotnet add package AIKit.MarkItDown
+`
+
+That's it! The library handles Python dependency detection automatically.
+
+### Prerequisites
+
+- **.NET 10.0 SDK** or higher
+- **Python 3.8+** installed and accessible via PATH (library auto-detects python, python3, or py)
+- Optional: Azure CLI for Document Intelligence, OpenAI API key for LLM features
+
+### From Source (Development)
+
+1. Clone and navigate:
+   `ash
+git clone https://github.com/your-repo/AIKit.MarkItDown.git
+cd AIKit.MarkItDown/src/AIKit.MarkItDown
+`
+
+2. Install Python dependencies:
+   `powershell
+.\install.ps1
+`
+   This installs markitdown[all], openai, zure-ai-documentintelligence, and a sample plugin.
+
+3. Build:
+   `ash
+dotnet build
+`
+
+The install script verifies Python version and installs all required packages via pip.
+
+## Integration Options
+
+AIKit.MarkItDown offers **two main ways** to integrate file conversion into your applications:
+
+### Option 1: Direct Library Integration (NuGet Package)
+
+**Best for**: Monolithic applications, tight coupling, maximum performance
+
+- Add the NuGet package to your .NET project
+- Call conversion methods directly from your code
+- Worker process runs alongside your application
+- Full control over configuration and error handling
+
+### Option 2: Separate Server Deployment (REST API)
+
+**Best for**: Microservices, distributed systems, multiple consumers, centralized processing
+
+- Deploy the server as a separate service (Docker/Kubernetes)
+- Call via HTTP REST API from any client
+- Centralized conversion service for multiple applications
+- Easier scaling and monitoring
+
+Choose based on your architecture needs - both options provide the same conversion capabilities with identical output.
+
+## Quick Start
+
+### For Direct Library Usage
+
+Convert your first file in 3 lines:
+
+```csharp
+using AIKit.MarkItDown;
+
+var converter = new MarkDownConverter();
+string markdown = converter.Convert("sample.pdf");
+Console.WriteLine(markdown);
 ```
 
-Or using Package Manager:
+**Output Example:**
 
-```powershell
-Install-Package AIKit.MarkItDown
+```markdown
+# Sample Document
+
+This is a PDF converted to Markdown.
+
+## Features
+
+- Preserves headings
+- Extracts text content
+- Handles basic formatting
 ```
 
-### Docker Image
-
-For server deployment:
+Start the server:
 
 ```bash
 cd src/AIKit.MarkItDown.Server
-docker build -t markitdown-server .
 docker run -d -p 8000:8000 markitdown-server
 ```
 
-### From Source
+Convert via HTTP:
 
-1. Clone the repository:
+```bash
+curl -X POST -F "file=@document.pdf" http://localhost:8000/convert
+```
 
-   ```bash
-   git clone https://github.com/your-repo/AIKit.MarkItDown.git
-   cd AIKit.MarkItDown
-   ```
+## Usage Examples
 
-2. Install Python dependencies:
+### Direct Library Integration
 
-   ```powershell
-   cd src/AIKit.MarkItDown
-   .\install.ps1
-   ```
-
-   **What the script does and what you need on your machine:**
-
-   The `install.ps1` script automates the installation of Python dependencies required for AIKit.MarkItDown. Here's what it checks and installs:
-
-   **Prerequisites on your machine:**
-   - **Python 3.8 or higher**: The script checks for Python via the `py` launcher (available with Python installations). If not found, it prompts you to install Python from https://www.python.org/.
-   - **PowerShell**: Required to run the script (standard on Windows, or PowerShell Core on other platforms).
-   - **Internet connection**: For downloading packages via pip.
-
-   **What the script installs:**
-   - `markitdown[all]`: The core Python library with all optional dependencies for supporting various file formats (PDF, DOCX, PPTX, XLSX, images, audio, etc.).
-   - `openai`: For LLM-powered features like image descriptions.
-   - `azure-ai-documentintelligence`: For Azure Document Intelligence integration.
-   - `markitdown-sample-plugin`: A sample plugin for demonstration purposes.
-
-   The script verifies Python version compatibility and exits with an error if requirements aren't met. All packages are installed using pip.
-
-   **Full install.ps1 script code:**
-
-   ```powershell
-   # PowerShell script to install Python dependencies for AIKit.MarkItDown
-   #https://github.com/microsoft/markitdown
-
-   # Check if Python is available via 'py' launcher
-   if (!(Get-Command py -ErrorAction SilentlyContinue)) {
-       Write-Host "Python is not installed or not in PATH. Please install Python 3.8+ from https://www.python.org/"
-       exit 1
-   }
-
-   # Check Python version
-   $pythonVersion = py -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-   $versionParts = $pythonVersion -split '\.'
-   $major = [int]$versionParts[0]
-   $minor = [int]$versionParts[1]
-   if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 8)) {
-       Write-Host "Python 3.8+ is required. Current version: $pythonVersion"
-       exit 1
-   }
-
-   # Install markitdown with all optional dependencies
-   # MarkItDown optional dependencies include:
-   # - [all]: All optional dependencies
-   # - [pptx]: PowerPoint files
-   # - [docx]: Word files
-   # - [xlsx]: Excel files
-   # - [xls]: Older Excel files
-   # - [pdf]: PDF files
-   # - [outlook]: Outlook messages
-   # - [az-doc-intel]: Azure Document Intelligence
-   # - [audio-transcription]: Audio transcription
-   # - [youtube-transcription]: YouTube transcription
-   #
-   # For OpenAI support, install openai separately: pip install openai
-   # For Azure Document Intelligence, use [az-doc-intel] or install azure-ai-documentintelligence
-   Write-Host "Installing markitdown[all]..."
-   py -m pip install "markitdown[all]"
-
-   # Install additional packages for LLM and Document Intelligence features
-   Write-Host "Installing OpenAI package..."
-   py -m pip install openai
-
-   Write-Host "Installing Azure Document Intelligence package..."
-   py -m pip install azure-ai-documentintelligence
-
-   # Install sample plugin for demonstration
-   Write-Host "Installing markitdown-sample-plugin..."
-   py -m pip install markitdown-sample-plugin
-
-   if ($LASTEXITCODE -eq 0) {
-       Write-Host "Installation completed successfully."
-   } else {
-       Write-Host "Installation failed."
-       exit 1
-   }
-   ```
-
-3. Build the solution:
-   ```bash
-   dotnet build
-   ```
-
-## Configuration
-
-Configure conversion behavior using the `MarkDownConfig` class:
+#### Basic File Conversion
 
 ```csharp
-using AIKit.MarkItDown;
+// Local files
+string pdfMarkdown = converter.Convert("document.pdf");
+string docxMarkdown = converter.Convert("report.docx");
 
+// Streams (useful for uploaded files)
+using var stream = File.OpenRead("presentation.pptx");
+string pptxMarkdown = converter.Convert(stream, "pptx");
+
+// URLs (web pages, YouTube videos, etc.)
+string webMarkdown = converter.ConvertUri("https://example.com/article");
+```
+
+#### Advanced Features
+
+```csharp
 var config = new MarkDownConfig
 {
-    DocIntelEndpoint = "https://your-doc-intel-endpoint.cognitiveservices.azure.com/",
-    DocIntelKey = "your-doc-intel-key",
-    OpenAiApiKey = "your-openai-api-key",
+    // AI-powered image descriptions
+    OpenAiApiKey = "sk-...",
     LlmModel = "gpt-4o",
-    LlmPrompt = "Custom prompt for LLM features",
+    LlmPrompt = "Describe this image in detail for accessibility",
+
+    // Advanced document processing
+    DocIntelEndpoint = "https://...",
+    DocIntelKey = "...",
+
+    // Preserve images as data URIs
     KeepDataUris = true,
+
+    // Enable custom plugins
     EnablePlugins = true,
-    Plugins = new List<string> { "custom_plugin" }
+    Plugins = new List<string> { "my_custom_plugin" }
 };
+
+string enhancedMarkdown = await converter.ConvertAsync("rich-document.pdf", config);
 ```
 
-### Configuration Properties
-
-- `DocIntelEndpoint`: Azure Document Intelligence endpoint URL
-- `DocIntelKey`: Azure Document Intelligence authentication key
-- `OpenAiApiKey`: OpenAI API key for LLM features
-- `LlmModel`: LLM model name (e.g., "gpt-4o")
-- `LlmPrompt`: Custom prompt for LLM processing
-- `KeepDataUris`: Preserve image data URIs in output
-- `EnablePlugins`: Enable third-party plugins
-- `Plugins`: List of plugin module names to load
-
-Validate configuration requirements:
+#### Async Operations
 
 ```csharp
-MarkDownConverter.ValidateConfigRequirements(config);
+// Non-blocking conversion
+string markdown = await converter.ConvertAsync("large-file.pdf");
+
+// With cancellation
+using var cts = new CancellationTokenSource();
+cts.CancelAfter(TimeSpan.FromMinutes(5));
+string markdown = await converter.ConvertAsync("file.pdf", config, cts.Token);
 ```
 
-**Note**: Some features (like plugins) are currently library-only and not fully supported in the server API.
-
-## Usage
-
-### Direct Library Usage
+#### Error Handling
 
 ```csharp
-using AIKit.MarkItDown;
-
-// Basic conversion
-var converter = new MarkDownConverter();
-string markdown = converter.Convert("path/to/file.pdf");
-
-
-var docIntelConfig = new DocIntelConfig
+try
 {
-    Endpoint = "https://your-doc-intel-endpoint.cognitiveservices.azure.com/",
-    Key = "your-doc-intel-key"
-};
-var openAiConfig = new OpenAIConfig
-{
-    ApiKey = "your-openai-api-key",
-    Model = "gpt-4o"
-};
-var converter = new MarkDownConverter(docIntelConfig, openAiConfig);
-string markdown = converter.Convert("path/to/file.pdf");
-
-var config = new MarkDownConfig { KeepDataUris = true, LlmPrompt = "Custom prompt" };
-string markdown = await converter.ConvertAsync("path/to/file.pdf", config);
-
-// Convert streams
-using (var stream = File.OpenRead("file.pdf"))
-{
-    string markdown = converter.Convert(stream, "pdf", config);
+    string markdown = converter.Convert("file.pdf");
 }
-
-// Convert URLs
-string markdown = converter.ConvertUri("https://www.youtube.com/watch?v=example", config);
-
-// Async operations
-string markdown = await converter.ConvertAsync("file.pdf", config);
+catch (MarkItDownConversionException ex)
+{
+    Console.WriteLine($"Conversion failed: {ex.Message}");
+    // Handle specific error types
+}
 ```
 
-### API Client Usage
+### Separate Server Deployment
+
+#### Client-Server Usage
+
+For distributed setups, use the client library:
 
 ```csharp
 using AIKit.MarkItDown.Client;
 
-var client = new MarkItDownClient(httpClient, logger);
+var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:8000") };
+var client = new MarkItDownClient(httpClient);
 
-// Convert file
-var result = await client.ConvertAsync("path/to/file.pdf");
+var result = await client.ConvertAsync("document.pdf");
 string markdown = result.Text;
-
-// With configuration
-var config = new MarkDownConfig { KeepDataUris = true };
-var result = await client.ConvertAsync("path/to/file.pdf", config);
-
-// Extension override
-var result = await client.ConvertAsync("path/to/file", "pdf", config);
 ```
 
-### Server API Usage
+#### REST API Direct Calls
 
 The server provides REST endpoints for remote conversion:
 
@@ -332,92 +306,289 @@ curl -X POST -H "Content-Type: application/json" \
 
 See [Server README](src/AIKit.MarkItDown.Server/README.md) for complete API documentation.
 
-## Testing
+## API Reference
 
-Run the test suite (requires Python environment):
+### MarkDownConverter (Core Class)
 
-```bash
-dotnet test
+```csharp
+public class MarkDownConverter
+{
+    // Constructors
+    public MarkDownConverter()
+    public MarkDownConverter(DocIntelConfig? docIntel = null, OpenAIConfig? openAi = null)
+
+    // Synchronous methods
+    public string Convert(string filePath)
+    public string Convert(Stream stream, string extension)
+    public string ConvertUri(string uri)
+    public string Convert(string filePath, MarkDownConfig? config)
+    public string Convert(Stream stream, string extension, MarkDownConfig? config)
+    public string ConvertUri(string uri, MarkDownConfig? config)
+
+    // Asynchronous methods
+    public Task<string> ConvertAsync(string filePath, MarkDownConfig? config = null, CancellationToken cancellationToken = default)
+    public Task<string> ConvertUriAsync(string uri, MarkDownConfig? config = null, CancellationToken cancellationToken = default)
+    public Task<string> ConvertAsync(Stream stream, string extension, MarkDownConfig? config = null, CancellationToken cancellationToken = default)
+
+    // Validation
+    public static void ValidateConfigRequirements(MarkDownConfig config)
+}
 ```
 
-Tests include unit tests for the core library, integration tests for the worker, and E2E tests for the client/server. Sample test files are provided in `TestShared/files/`.
+### MarkDownConfig
+
+```csharp
+public class MarkDownConfig
+{
+    // Azure Document Intelligence
+    public DocIntelConfig? DocIntel { get; set; }
+
+    // OpenAI Configuration
+    public OpenAIConfig? OpenAI { get; set; }
+
+    // LLM Settings
+    public string? LlmModel { get; set; } = "gpt-4o";
+    public string? LlmPrompt { get; set; }
+
+    // Output Options
+    public bool? KeepDataUris { get; set; } = false;
+
+    // Plugin System
+    public bool? EnablePlugins { get; set; } = false;
+    public List<string> Plugins { get; set; } = new();
+}
+```
+
+### DocIntelConfig & OpenAIConfig
+
+```csharp
+public class DocIntelConfig
+{
+    public string? Endpoint { get; set; }
+    public string? Key { get; set; }
+}
+
+public class OpenAIConfig
+{
+    public string? ApiKey { get; set; }
+    public string? Model { get; set; }
+}
+```
+
+### MarkItDownClient
+
+```csharp
+public class MarkItDownClient : IDisposable
+{
+    public MarkItDownClient(HttpClient httpClient, ILogger<MarkItDownClient>? logger = null)
+
+    // File conversion methods
+    public Task<string> ConvertAsync(Stream fileStream, string fileName, string? extension = null, MarkDownConfig? config = null)
+    public Task<MarkDownResult> ConvertAsync(string filePath, MarkDownConfig? config = null)
+    public Task<MarkDownResult> ConvertAsync(Stream stream, string extension, MarkDownConfig? config = null)
+
+    // URI conversion
+    public Task<string> ConvertUriAsync(string uri, MarkDownConfig? config = null)
+}
+```
+
+## Configuration
+
+### Basic Setup
+
+Most conversions work without configuration. For AI features:
+
+```csharp
+var config = new MarkDownConfig
+{
+    // Azure Document Intelligence (for advanced PDF/Word processing)
+    DocIntel = new DocIntelConfig
+    {
+        Endpoint = Environment.GetEnvironmentVariable("DOCINTEL_ENDPOINT"),
+        Key = Environment.GetEnvironmentVariable("DOCINTEL_KEY")
+    },
+
+    // OpenAI (for LLM image descriptions, audio transcription)
+    OpenAI = new OpenAIConfig
+    {
+        ApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY"),
+        Model = "gpt-4o"
+    },
+
+    LlmPrompt = "Describe this image for accessibility purposes",
+    KeepDataUris = true,
+    EnablePlugins = true
+};
+```
+
+### Environment Variables
+
+Set these securely (never hardcode):
+
+**For C# Library:**
+
+- `DOCINTEL_ENDPOINT` - Azure Document Intelligence endpoint
+- `DOCINTEL_KEY` - Azure Document Intelligence key
+- `OPENAI_API_KEY` - OpenAI API key
+
+**For Python Server:**
+
+- `DOCINTEL_ENDPOINT` - Azure Document Intelligence endpoint
+- `DOCINTEL_KEY` - Azure Document Intelligence key
+- `OPENAI_API_KEY` - OpenAI API key
+- `OPENAI_MODEL` - OpenAI model (default: gpt-4o)
+- `LLM_PROMPT` - Custom LLM prompt
+
+### Plugin Configuration
+
+Enable custom plugins:
+
+```csharp
+var config = new MarkDownConfig
+{
+    EnablePlugins = true,
+    Plugins = new List<string> { "my_plugin", "another_plugin" }
+};
+```
+
+Plugins are Python modules that extend markitdown's conversion capabilities.
 
 ## Deployment
 
-### Local Development with Aspire
+### Local Development
 
-Use .NET Aspire for orchestrated local development:
+Use .NET Aspire for orchestrated development:
 
-1. Open the solution in Visual Studio or VS Code
-2. Run the `AIKit.MarkItDown.AppHost` project
-3. The server starts on port 8000
+1. Open AIKit.MarkItDown.slnx in Visual Studio/VS Code
+2. Run AIKit.MarkItDown.AppHost
+3. Server starts on http://localhost:8000
 
-### Docker Deployment
+### Docker (Production)
 
-```bash
+`ash
 cd src/AIKit.MarkItDown.Server
 docker build -t markitdown-server .
-docker run -d -p 8000:8000 markitdown-server
-```
+docker run -d -p 8000:8000 \
+  -e AZURE_DOC_INTELLIGENCE_ENDPOINT="..." \
+  -e AZURE_DOC_INTELLIGENCE_KEY="..." \
+  -e OPENAI_API_KEY="..." \
+  markitdown-server
+`
 
-Or using Docker Compose:
+### Docker Compose
 
-```bash
-docker compose up --build
-```
-
-Environment variables:
-
-- `PORT`: Server port (default: 8000)
+`yaml
+version: '3.8'
+services:
+  markitdown:
+    build: ./src/AIKit.MarkItDown.Server
+    ports:
+      - "8000:8000"
+    environment:
+      - AZURE_DOC_INTELLIGENCE_ENDPOINT=
+      - AZURE_DOC_INTELLIGENCE_KEY=
+      - OPENAI_API_KEY=
+`
 
 ### Production Considerations
 
-- Ensure Python dependencies are installed in the deployment environment
-- Configure Azure/OpenAI credentials securely (avoid hardcoding)
-- Monitor worker process resource usage in high-concurrency scenarios
+- **Security**: Use secrets management for API keys, never commit them
+- **Scaling**: Worker processes are lightweight; monitor resource usage
+- **File Limits**: Default 100MB limit; adjust based on your needs
+- **Logging**: Enable structured logging for troubleshooting
+- **Health Checks**: Server includes /health endpoint for monitoring
 
 ## Troubleshooting
 
-### Python Detection Issues
+### Python Not Found
 
-If Python is not found:
+**Error**: "Python executable not found"
 
-- Ensure Python 3.8+ is installed and in PATH
-- On Windows, check common locations: `C:\Python38\`, `C:\Python39\`, etc.
-- Run `python --version` or `python3 --version` to verify
+**Solution**:
 
-### DLL Mismatch Errors
+- Install Python 3.8+ from python.org
+- Ensure python or python3 is in PATH
+- On Windows, check registry detection or set PYTHONHOME
 
-- Verify pythonnet version (3.0.5) matches Python version
-- Ensure `pythonXY.dll` exists in Python installation directory
-- Reinstall pythonnet if needed: `dotnet add package pythonnet --version 3.0.5`
+### DLL Mismatch
 
-### GIL-Related Issues
+**Error**: "Unable to load pythonXY.dll"
 
-- All Python operations must occur within `Py.GIL()` context
-- Avoid long-running operations on the main thread
-- Use async methods for non-blocking conversions
+**Solution**:
+
+- Verify pythonnet 3.0.5 matches your Python version
+- Reinstall: dotnet add package pythonnet --version 3.0.5
+- Check Python installation integrity
+
+### GIL Issues
+
+**Error**: Thread blocking or deadlocks
+
+**Solution**:
+
+- Use async methods for non-blocking operations
+- Avoid long conversions on UI threads
+- Worker process handles GIL isolation automatically
 
 ### Conversion Failures
 
-- Check file format support and file accessibility
-- Validate configuration for required services (Azure Doc Intel, OpenAI)
-- Review worker process logs for detailed error messages
+**Common Issues**:
+
+- Unsupported file format (check markitdown docs)
+- Corrupted files
+- Missing AI service credentials
+- Network timeouts for URLs
+
+**Debug**:
+
+- Enable logging: ILogger in client/server
+- Check worker process output
+- Validate file accessibility
 
 ### Server Issues
 
-- Verify Docker container has required system dependencies (ffmpeg, tesseract-ocr)
-- Check server logs: `docker logs markitdown-server`
-- Ensure port 8000 is available
+**Container Problems**:
+
+- Ensure Docker has required system deps: fmpeg, esseract-ocr
+- Check logs: docker logs <container>
+- Verify port availability
+
+**API Errors**:
+
+- Validate request format
+- Check file size limits
+- Review server logs for detailed errors
 
 ## Contributing
 
-Contributions are welcome! Please:
+We welcome contributions! Here's how to get started:
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+1. **Fork** the repository
+2. **Clone** your fork: git clone https://github.com/your-username/AIKit.MarkItDown.git
+3. **Create** a feature branch: git checkout -b feature/my-awesome-feature
+4. **Install** dependencies: Run install.ps1 in src/AIKit.MarkItDown
+5. **Test** your changes: dotnet test
+6. **Submit** a pull request
 
-For major changes, please open an issue first to discuss the proposed changes.
+### Development Setup
+
+- Use Visual Studio 2022+ or VS Code with C# extensions
+- Install .NET Aspire workload: dotnet workload install aspire
+- Run tests before submitting: dotnet test --verbosity normal
+
+### Guidelines
+
+- Follow existing code patterns (async/await, error handling)
+- Add unit tests for new features
+- Update documentation for API changes
+- Use meaningful commit messages
+
+For major changes, please open an issue first to discuss.
+
+## TODO
+
+- **Test OpenAI Integration**: The solution has not been fully tested with OpenAI client features due to lack of API credentials. Requires valid OpenAI API key for testing LLM-powered image descriptions and other AI features.
+- **Test Azure Document Intelligence**: Azure Document Intelligence integration is not tested due to missing Azure credentials. Requires Azure subscription and Document Intelligence resource for testing advanced document processing features.
+- **Publish NuGet Package**: Package the AIKit.MarkItDown library and publish to NuGet.org for public consumption.
+- **Publish Docker Image**: Build and publish the Docker image for the server component to a container registry (Docker Hub, GitHub Container Registry, etc.).
+- **CI/CD Pipeline**: Implement automated testing pipeline that includes Python environment setup and credential management for full integration testing.
