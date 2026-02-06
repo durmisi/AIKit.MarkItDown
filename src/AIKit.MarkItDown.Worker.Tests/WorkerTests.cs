@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Runtime.InteropServices;
 using Xunit.Abstractions;
 
 namespace AIKit.MarkItDown.Worker.Tests;
@@ -182,13 +183,15 @@ public class WorkerTests
         var baseDir = Path.GetDirectoryName(typeof(WorkerTests).Assembly.Location)!;
         var workerProjectDir = Path.Combine(baseDir, "..", "..", "..", "..", "AIKit.MarkItDown.Worker", "bin");
         
+        string exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "AIKit.MarkItDown.Worker.exe" : "AIKit.MarkItDown.Worker";
+        
         // Try Debug first, then Release
         var configurations = new[] { "Debug", "Release" };
         string? workerBinDir = null;
         foreach (var config in configurations)
         {
             var dir = Path.Combine(workerProjectDir, config, "net10.0");
-            if (Directory.Exists(dir) && File.Exists(Path.Combine(dir, "AIKit.MarkItDown.Worker.exe")))
+            if (Directory.Exists(dir) && File.Exists(Path.Combine(dir, exeName)))
             {
                 workerBinDir = dir;
                 break;
@@ -197,10 +200,10 @@ public class WorkerTests
         
         if (workerBinDir == null)
         {
-            throw new FileNotFoundException("Could not find AIKit.MarkItDown.Worker.exe in Debug or Release directories.");
+            throw new FileNotFoundException($"Could not find {exeName} in Debug or Release directories.");
         }
         
-        var exePath = Path.Combine(workerBinDir, "AIKit.MarkItDown.Worker.exe");
+        var exePath = Path.Combine(workerBinDir, exeName);
         var process = new Process
         {
             StartInfo = new ProcessStartInfo

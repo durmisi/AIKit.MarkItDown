@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Runtime.InteropServices;
 using Xunit.Abstractions;
 
 namespace AIKit.MarkItDown.Client.Tests;
@@ -180,8 +181,8 @@ public class E2eTests : IAsyncLifetime
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = "uvicorn",
-            Arguments = $"main:app --host 0.0.0.0 --port {ServerPort}",
+            FileName = "python",
+            Arguments = $"-m uvicorn main:app --host 0.0.0.0 --port {ServerPort}",
             WorkingDirectory = apiDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -223,13 +224,15 @@ public class E2eTests : IAsyncLifetime
         var baseDir = Path.GetDirectoryName(typeof(E2eTests).Assembly.Location)!;
         var workerProjectDir = Path.Combine(baseDir, "..", "..", "..", "..", "AIKit.MarkItDown.Worker", "bin");
         
+        string exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "AIKit.MarkItDown.Worker.exe" : "AIKit.MarkItDown.Worker";
+        
         // Try Debug first, then Release
         var configurations = new[] { "Debug", "Release" };
         string? workerBinDir = null;
         foreach (var config in configurations)
         {
             var dir = Path.Combine(workerProjectDir, config, "net10.0");
-            if (Directory.Exists(dir) && File.Exists(Path.Combine(dir, "AIKit.MarkItDown.Worker.exe")))
+            if (Directory.Exists(dir) && File.Exists(Path.Combine(dir, exeName)))
             {
                 workerBinDir = dir;
                 break;
@@ -238,10 +241,10 @@ public class E2eTests : IAsyncLifetime
         
         if (workerBinDir == null)
         {
-            throw new FileNotFoundException("Could not find AIKit.MarkItDown.Worker.exe in Debug or Release directories.");
+            throw new FileNotFoundException($"Could not find {exeName} in Debug or Release directories.");
         }
         
-        var exePath = Path.Combine(workerBinDir, "AIKit.MarkItDown.Worker.exe");
+        var exePath = Path.Combine(workerBinDir, exeName);
         var process = new Process
         {
             StartInfo = new ProcessStartInfo

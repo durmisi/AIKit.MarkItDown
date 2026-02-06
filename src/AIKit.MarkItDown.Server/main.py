@@ -108,3 +108,6 @@ async def health():
 
 app.include_router(router)
 app.include_router(uri_router)
+
+app.add_api_route("/", root, methods=["GET"])
+app.add_api_route("/health", health, methods=["GET"])
