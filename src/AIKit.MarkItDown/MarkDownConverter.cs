@@ -1,5 +1,6 @@
-using Python.Runtime;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AIKit.MarkItDown;
 
@@ -7,22 +8,14 @@ public class MarkDownConverter
 {
     private const long MaxStreamSizeBytes = 100 * 1024 * 1024; // 100 MB
     private const int DefaultTimeoutMs = 30_000;
+    private static readonly string WorkerExePath;
 
     static MarkDownConverter()
     {
-        string pythonExe = GetPythonExecutable()
-            ?? throw new InvalidOperationException("Python 3.8+ not found.");
-
-        string dllPath = GetPythonDllPath(pythonExe)
-            ?? throw new InvalidOperationException("Python DLL not found.");
-
-        Runtime.PythonDLL = dllPath;
-
-        if (!PythonEngine.IsInitialized)
-        {
-            PythonEngine.Initialize();
-            PythonEngine.BeginAllowThreads();
-        }
+        var assemblyDir = Path.GetDirectoryName(typeof(MarkDownConverter).Assembly.Location)!;
+        WorkerExePath = Path.Combine(assemblyDir, "AIKit.MarkItDown.Worker.exe");
+        if (!File.Exists(WorkerExePath))
+            throw new InvalidOperationException("Worker exe not found.");
     }
 
     /* ---------------------------------------------------------
@@ -33,20 +26,20 @@ public class MarkDownConverter
         string filePath,
         MarkDownConfig? config = null,
         CancellationToken ct = default)
-        => RunAsync(() => ConvertInternal(filePath, config), ct);
+        => RunAsync((ct) => ConvertInternalAsync(filePath, config, ct), ct);
 
     public Task<string> ConvertAsync(
         Stream stream,
         string extension,
         MarkDownConfig? config = null,
         CancellationToken ct = default)
-        => RunAsync(() => ConvertInternal(stream, extension, config), ct);
+        => RunAsync((ct) => ConvertInternalAsync(stream, extension, config, ct), ct);
 
     public Task<string> ConvertUriAsync(
         string uri,
         MarkDownConfig? config = null,
         CancellationToken ct = default)
-        => RunAsync(() => ConvertUriInternal(uri, config), ct);
+        => RunAsync((ct) => ConvertUriInternalAsync(uri, config, ct), ct);
 
     /* ---------------------------------------------------------
      * PUBLIC SYNC API
@@ -55,290 +48,160 @@ public class MarkDownConverter
     public string Convert(
         string filePath,
         MarkDownConfig? config = null)
-        => ConvertInternal(filePath, config);
+        => ConvertInternalAsync(filePath, config, default).Result;
 
     public string Convert(
         Stream stream,
         string extension,
         MarkDownConfig? config = null)
-        => ConvertInternal(stream, extension, config);
+        => ConvertInternalAsync(stream, extension, config, default).Result;
 
     public string ConvertUri(
         string uri,
         MarkDownConfig? config = null)
-        => ConvertUriInternal(uri, config);
+        => ConvertUriInternalAsync(uri, config, default).Result;
 
     /* ---------------------------------------------------------
      * ASYNC EXECUTION WRAPPER
      * --------------------------------------------------------- */
 
     private static async Task<string> RunAsync(
-        Func<string> work,
+        Func<CancellationToken, Task<string>> work,
         CancellationToken ct,
         int timeoutMs = DefaultTimeoutMs)
     {
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
         cts.CancelAfter(timeoutMs);
 
-        return await Task.Run(() =>
-        {
-            ct.ThrowIfCancellationRequested();
-            return work();
-        }, cts.Token);
+        return await work(cts.Token);
     }
+
+    private static async Task<string> RunWorkerAsync(object input, CancellationToken ct)
+    {
+        var json = JsonSerializer.Serialize(input);
+        var psi = new ProcessStartInfo
+        {
+            FileName = WorkerExePath,
+            Arguments = "",
+            WorkingDirectory = Path.GetDirectoryName(WorkerExePath),
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = Process.Start(psi)!;
+        using var writer = process.StandardInput;
+        await writer.WriteAsync(json);
+        writer.Close();
+
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        await Task.WhenAll(outputTask, process.WaitForExitAsync(ct));
+
+        var output = await outputTask;
+        var error = await errorTask;
+
+        if (process.ExitCode != 0)
+            throw new MarkItDownConversionException($"Worker process failed: {error}");
+
+        Console.WriteLine($"Worker output: '{output.Trim()}'");
+        var result = JsonSerializer.Deserialize<WorkerResult>(output);
+        if (result == null || !result.Success)
+            throw new MarkItDownConversionException(result?.Error ?? "Unknown error");
+
+        return result.Result;
+    }
+
+    private record WorkerResult(
+        [property: JsonPropertyName("success")] bool Success,
+        [property: JsonPropertyName("result")] string? Result,
+        [property: JsonPropertyName("error")] string? Error);
 
     /* ---------------------------------------------------------
      * SYNC PYTHON CORE (GIL OWNERSHIP)
      * --------------------------------------------------------- */
 
-    private string ConvertInternal(string filePath, MarkDownConfig? config)
+    private async Task<string> ConvertInternalAsync(string filePath, MarkDownConfig? config, CancellationToken ct)
     {
-        config?.Let(ValidateConfigRequirements);
+        if (!File.Exists(filePath))
+            throw new MarkItDownConversionException($"File not found: '{filePath}'.");
 
-        byte[] fileBytes;
-        try
+        var input = new
         {
-            fileBytes = File.ReadAllBytes(filePath);
-        }
-        catch (Exception ex)
-        {
-            throw new MarkItDownConversionException($"File not found: Failed to read file '{filePath}'.", ex);
-        }
-        string extension = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
+            Type = "file",
+            Path = filePath,
+            Kwargs = BuildKwargsDict(config)
+        };
 
-        using (Py.GIL())
-        {
-            DisablePythonLogging();
-
-            dynamic markitdown = Py.Import("markitdown");
-            dynamic md = markitdown.MarkItDown();
-
-            var kwargs = BuildKwargs(config);
-
-            if (extension == "pdf")
-            {
-                dynamic io = Py.Import("io");
-                using var pyStream = io.BytesIO(fileBytes);
-                kwargs["file_extension"] = new PyString(extension);
-                kwargs["check_extractable"] = PyObject.FromManagedObject(false);
-
-                dynamic result = ((PyObject)md).InvokeMethod("convert_stream", new PyTuple(new PyObject[] { pyStream }), kwargs);
-                return result.text_content;
-            }
-
-            dynamic r = ((PyObject)md).InvokeMethod("convert", new PyTuple(new PyObject[] { new PyString(filePath) }), kwargs);
-            return r.text_content;
-        }
+        return await RunWorkerAsync(input, ct);
     }
 
-    private string ConvertInternal(Stream stream, string extension, MarkDownConfig? config)
+    private async Task<string> ConvertInternalAsync(Stream stream, string extension, MarkDownConfig? config, CancellationToken ct)
     {
         if (stream.Length > MaxStreamSizeBytes)
             throw new MarkItDownConversionException("Stream too large.");
 
-        config?.Let(ValidateConfigRequirements);
-
         using var ms = new MemoryStream();
-        stream.CopyTo(ms);
-        byte[] bytes = ms.ToArray();
+        await stream.CopyToAsync(ms);
+        var data = System.Convert.ToBase64String(ms.ToArray());
 
-        using (Py.GIL())
+        var input = new
         {
-            DisablePythonLogging();
+            Type = "stream",
+            Data = data,
+            Extension = extension,
+            Kwargs = BuildKwargsDict(config)
+        };
 
-            dynamic markitdown = Py.Import("markitdown");
-            dynamic md = markitdown.MarkItDown();
-            dynamic io = Py.Import("io");
-
-            var kwargs = BuildKwargs(config);
-            kwargs["file_extension"] = new PyString(extension);
-
-            using var pyStream = io.BytesIO(bytes);
-            dynamic result = ((PyObject)md).InvokeMethod("convert_stream", new PyTuple(new PyObject[] { pyStream }), kwargs);
-            return result.text_content;
-        }
+        return await RunWorkerAsync(input, ct);
     }
 
-public static void ValidateConfigRequirements(MarkDownConfig config)
-{
-    if (config == null)
-        return;
-
-    using (Py.GIL())
+    private async Task<string> ConvertUriInternalAsync(string uri, MarkDownConfig? config, CancellationToken ct)
     {
-        // Azure Document Intelligence
-        if (!string.IsNullOrEmpty(config.DocIntelEndpoint) ||
-            !string.IsNullOrEmpty(config.DocIntelKey))
+        var input = new
         {
-            try
-            {
-                Py.Import("azure.ai.documentintelligence");
-            }
-            catch (PythonException ex)
-            {
-                throw new MarkItDownConversionException(
-                    "Azure Document Intelligence package not installed. " +
-                    "Install 'azure-ai-documentintelligence'.", ex);
-            }
-        }
+            Type = "uri",
+            Uri = uri,
+            Kwargs = BuildKwargsDict(config)
+        };
 
-        // OpenAI / LLM support
-        if (!string.IsNullOrEmpty(config.OpenAiApiKey) ||
-            !string.IsNullOrEmpty(config.LlmModel))
-        {
-            try
-            {
-                Py.Import("openai");
-            }
-            catch (PythonException ex)
-            {
-                throw new MarkItDownConversionException(
-                    "OpenAI package not installed. Install 'openai'.", ex);
-            }
-        }
-
-        // Plugins
-        if (config.Plugins != null && config.Plugins.Any())
-        {
-            foreach (var plugin in config.Plugins)
-            {
-                try
-                {
-                    Py.Import(plugin);
-                }
-                catch (PythonException ex)
-                {
-                    throw new MarkItDownConversionException(
-                        $"Plugin '{plugin}' not installed or failed to import.", ex);
-                }
-            }
-        }
-    }
-}
-
-public static dynamic CreateOpenAiClient(string apiKey)
-{
-    using (Py.GIL())
-    {
-        try
-        {
-            dynamic openai = Py.Import("openai");
-            dynamic client = openai.OpenAI(api_key: apiKey);
-            return client;
-        }
-        catch (PythonException ex)
-        {
-            throw new MarkItDownConversionException(
-                "Failed to create OpenAI client.", ex);
-        }
-    }
-}
-
-
-    private string ConvertUriInternal(string uri, MarkDownConfig? config)
-    {
-        config?.Let(ValidateConfigRequirements);
-
-        using (Py.GIL())
-        {
-            DisablePythonLogging();
-
-            dynamic markitdown = Py.Import("markitdown");
-            dynamic md = markitdown.MarkItDown();
-
-            var kwargs = BuildKwargs(config);
-            dynamic result = ((PyObject)md).InvokeMethod("convert", new PyTuple(new PyObject[] { new PyString(uri) }), kwargs);
-            return result.text_content;
-        }
+        return await RunWorkerAsync(input, ct);
     }
 
     /* ---------------------------------------------------------
      * HELPERS
      * --------------------------------------------------------- */
 
-    private static void DisablePythonLogging()
-        => PythonEngine.RunSimpleString("import logging; logging.disable(logging.WARNING)");
-
-    private static PyDict BuildKwargs(MarkDownConfig? config)
+    private static Dictionary<string, object> BuildKwargsDict(MarkDownConfig? config)
     {
-        var kwargs = new PyDict();
+        var kwargs = new Dictionary<string, object>();
 
         if (config == null)
             return kwargs;
 
         if (!string.IsNullOrEmpty(config.DocIntelEndpoint))
-            kwargs["docintel_endpoint"] = new PyString(config.DocIntelEndpoint);
+            kwargs["docintel_endpoint"] = config.DocIntelEndpoint;
 
         if (!string.IsNullOrEmpty(config.DocIntelKey))
-            kwargs["docintel_key"] = new PyString(config.DocIntelKey);
+            kwargs["docintel_key"] = config.DocIntelKey;
 
         if (!string.IsNullOrEmpty(config.OpenAiApiKey))
-            kwargs["openai_api_key"] = new PyString(config.OpenAiApiKey);
+            kwargs["openai_api_key"] = config.OpenAiApiKey;
 
         if (!string.IsNullOrEmpty(config.LlmModel))
-            kwargs["llm_model"] = new PyString(config.LlmModel);
+            kwargs["llm_model"] = config.LlmModel;
 
         if (!string.IsNullOrEmpty(config.LlmPrompt))
-            kwargs["llm_prompt"] = new PyString(config.LlmPrompt);
+            kwargs["llm_prompt"] = config.LlmPrompt;
 
         if (config.KeepDataUris)
-            kwargs["keep_data_uris"] = PyObject.FromManagedObject(true);
+            kwargs["keep_data_uris"] = true;
 
         if (config.EnablePlugins)
-            kwargs["enable_plugins"] = PyObject.FromManagedObject(true);
+            kwargs["enable_plugins"] = true;
 
         return kwargs;
     }
-
-    /* ---------------------------------------------------------
-     * PYTHON DISCOVERY (unchanged)
-     * --------------------------------------------------------- */
-
-    private static string? GetPythonExecutable()
-    {
-        foreach (var cmd in new[] { "python", "python3", "py" })
-            if (IsCommandAvailable(cmd, "--version"))
-                return Run(cmd, "-c \"import sys; print(sys.executable)\"");
-
-        return null;
-    }
-
-    private static string? GetPythonDllPath(string pythonExe)
-    {
-        string dll = Run(pythonExe, "-c \"import sys; print(f'python{sys.version_info.major}{sys.version_info.minor}.dll')\"");
-        return string.IsNullOrEmpty(dll) ? null : Path.Combine(Path.GetDirectoryName(pythonExe)!, dll);
-    }
-
-    private static string Run(string cmd, string args)
-    {
-        using var p = Process.Start(new ProcessStartInfo
-        {
-            FileName = cmd,
-            Arguments = args,
-            RedirectStandardOutput = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        })!;
-
-        p.WaitForExit();
-        if (p.ExitCode != 0)
-            throw new InvalidOperationException($"Command '{cmd} {args}' failed with exit code {p.ExitCode}");
-
-        return p.StandardOutput.ReadToEnd().Trim();
-    }
-
-    private static bool IsCommandAvailable(string cmd, string args)
-    {
-        try { Run(cmd, args); return true; }
-        catch { return false; }
-    }
-}
-
-/* ---------------------------------------------------------
- * SMALL EXTENSION
- * --------------------------------------------------------- */
-
-internal static class FuncExtensions
-{
-    public static void Let<T>(this T value, Action<T> action) => action(value);
 }

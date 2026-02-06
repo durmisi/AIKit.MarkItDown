@@ -1,8 +1,11 @@
 <Solution>
   <Folder Name="/Server/" />
   <Project Path="AIKit.MarkItDown.AppHost/AIKit.MarkItDown.AppHost.csproj" Id="ac62446f-45e6-4bfa-9922-a14a719c4ac8" />
+  <Project Path="AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj" />
   <Project Path="AIKit.MarkItDown.Client/AIKit.MarkItDown.Client.csproj" />
   <Project Path="AIKit.MarkItDown.ServiceDefaults/AIKit.MarkItDown.ServiceDefaults.csproj" />
   <Project Path="AIKit.MarkItDown.Tests/AIKit.MarkItDown.Tests.csproj" />
+  <Project Path="AIKit.MarkItDown.Worker/AIKit.MarkItDown.Worker.csproj" />
+  <Project Path="AIKit.MarkItDown.Worker.Tests/AIKit.MarkItDown.Worker.Tests.csproj" />
   <Project Path="AIKit.MarkItDown/AIKit.MarkItDown.csproj" />
 </Solution>

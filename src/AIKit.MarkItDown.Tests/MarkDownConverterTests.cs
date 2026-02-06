@@ -1,10 +1,7 @@
 ﻿using Xunit.Abstractions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AIKit.MarkItDown.Tests;
 
-[Collection("Sequential")]
 public class MarkDownConverterTests
 {
     private readonly ITestOutputHelper _output;
@@ -104,26 +101,16 @@ public class MarkDownConverterTests
         _output.WriteLine("Starting URI conversion test");
         var converter = new MarkDownConverter();
         // Use a simple text URL for testing
-        var uri = "https://www.example.com"; // This might not work, but test the method
+        var uri = "https://www.example.com";
         _output.WriteLine($"Converting URI: {uri}");
 
-        // Note: This may fail if network is not available or URL doesn't convert
-        try
-        {
-            var result = converter.ConvertUri(uri);
-            _output.WriteLine($"URI conversion result length: {result.Length}");
-            _output.WriteLine("```markdown");
-            _output.WriteLine(result);
-            _output.WriteLine("```");
-            Assert.NotNull(result);
-            // Assert.NotNull(result.Text); // May be empty for non-convertible URLs
-        }
-        catch (MarkItDownConversionException ex)
-        {
-            _output.WriteLine($"URI conversion failed as expected: {ex.Message}");
-            // Assert that it's a conversion failure, not a method error
-            Assert.Contains("MarkItDown URI conversion failed", ex.Message);
-        }
+        var result = converter.ConvertUri(uri);
+        _output.WriteLine($"URI conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
+        Assert.NotNull(result);
+        Assert.True(result.Length > 0, "Markdown should not be empty");
     }
 
     [Theory]
@@ -223,37 +210,6 @@ public class MarkDownConverterTests
             // YouTube might require additional setup, so we note it but don't fail the test
             Assert.Contains("MarkItDown URI conversion failed", ex.Message);
         }
-    }
-
-    [Fact]
-    public void CreateOpenAiClient_Works_WhenOpenAiInstalled()
-    {
-        _output.WriteLine("Testing OpenAI client creation with package installed");
-
-        // Since OpenAI is installed, this should not throw for package missing
-        // It might throw for invalid API key, but not for missing package
-        try
-        {
-            var client = MarkDownConverter.CreateOpenAiClient("fake-key");
-            // If it succeeds, that's fine
-            Assert.NotNull(client);
-        }
-        catch (MarkItDownConversionException ex)
-        {
-            // Should not be about missing package
-            Assert.DoesNotContain("OpenAI package not installed", ex.Message);
-        }
-    }
-
-    [Fact]
-    public async Task ValidateConfigRequirements_Works_ForInstalledPackages()
-    {
-        _output.WriteLine("Testing config validation with installed packages");
-
-        var config = new MarkDownConfig { DocIntelEndpoint = "endpoint" };
-        // Should not throw since azure-ai-documentintelligence is installed
-        MarkDownConverter.ValidateConfigRequirements(config);
-        // If no exception, test passes
     }
 
     // Async tests
@@ -434,5 +390,29 @@ public class MarkDownConverterTests
         cts.Cancel();
 
         await Assert.ThrowsAsync<TaskCanceledException>(() => converter.ConvertAsync(filePath, ct: cts.Token));
+    }
+
+    [Fact]
+    public async Task ConvertAsync_ParallelExecutions_Work()
+    {
+        _output.WriteLine("Testing parallel executions");
+        var converter = new MarkDownConverter();
+        var filePath = Path.Combine(AppContext.BaseDirectory, "tst-text.txt");
+
+        var tasks = new List<Task<string>>();
+        for (int i = 0; i < 5; i++)
+        {
+            tasks.Add(converter.ConvertAsync(filePath));
+        }
+
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var result in results)
+        {
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+        }
+
+        _output.WriteLine($"All {results.Length} parallel conversions succeeded");
     }
 }

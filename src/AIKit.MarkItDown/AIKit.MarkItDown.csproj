@@ -13,12 +13,30 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="pythonnet" Version="3.0.5" />
-  </ItemGroup>
+  <Target Name="CopyWorker" AfterTargets="Build">
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFolder="$(OutputPath)" />
+  </Target>
+
+  <Target Name="CopyWorkerToTools" BeforeTargets="GenerateNuspec">
+    <MakeDir Directories="$(ProjectDir)tools" />
+    <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker.exe" DestinationFolder="$(ProjectDir)tools" />
+    <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker.dll" DestinationFolder="$(ProjectDir)tools" />
+    <Copy SourceFiles="$(OutputPath)AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(ProjectDir)tools" />
+    <Copy SourceFiles="$(OutputPath)Python.Runtime.dll" DestinationFolder="$(ProjectDir)tools" />
+  </Target>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="tools\AIKit.MarkItDown.Worker.exe" Pack="true" PackagePath="tools\" />
+    <Content Include="tools\AIKit.MarkItDown.Worker.dll" Pack="true" PackagePath="tools\" />
+    <Content Include="tools\AIKit.MarkItDown.Worker.runtimeconfig.json" Pack="true" PackagePath="tools\" />
+    <Content Include="tools\Python.Runtime.dll" Pack="true" PackagePath="tools\" />
   </ItemGroup>
 
 </Project>

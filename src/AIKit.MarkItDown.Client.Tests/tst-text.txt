@@ -1,0 +1,46 @@
+Test Document for MarkItDown
+
+This is a comprehensive test file to verify the MarkItDown conversion capabilities.
+
+Section 1: Basic Text
+
+This paragraph contains some basic text with bold and italic formatting. It also includes inline code snippets.
+
+Section 2: Lists
+
+Unordered List
+- Item 1
+- Item 2
+  - Nested item 2.1
+  - Nested item 2.2
+- Item 3
+
+Ordered List
+1. First item
+2. Second item
+3. Third item
+
+Section 3: Code Blocks
+
+Here's a simple code example:
+
+def hello_world():
+    print("Hello, World!")
+    return True
+
+Section 4: Links and References
+
+For more information, visit Markdown Guide at https://www.markdownguide.org.
+
+Section 5: Tables
+
+Feature | Status
+--------|--------
+Bold text | Yes
+Italic text | Yes
+Code blocks | Yes
+Lists | Yes
+
+Conclusion
+
+This test file demonstrates various text elements that should be properly converted to Markdown format by the MarkItDown library.

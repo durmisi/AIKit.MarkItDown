@@ -23,17 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AIKit.MarkItDown\AIKit.MarkItDown.csproj" />
-    <ProjectReference Include="..\AIKit.MarkItDown.AppHost\AIKit.MarkItDown.AppHost.csproj" />
     <ProjectReference Include="..\AIKit.MarkItDown.Client\AIKit.MarkItDown.Client.csproj" />
+    <ProjectReference Include="..\AIKit.MarkItDown.AppHost\AIKit.MarkItDown.AppHost.csproj" />
   </ItemGroup>
-
-  <Target Name="CopyWorkerToTestOutput" AfterTargets="Build">
-    <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFolder="$(OutputPath)" />
-    <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFolder="$(OutputPath)" />
-    <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(OutputPath)" />
-    <Copy SourceFiles="..\AIKit.MarkItDown\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFolder="$(OutputPath)" />
-  </Target>
 
   <ItemGroup>
     <None Update="pdf-test.pdf">
@@ -43,10 +35,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <Target Name="CopyWorker" AfterTargets="Build">
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFolder="$(OutputPath)" />
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(OutputPath)" />
-  </Target>
 
 </Project>
