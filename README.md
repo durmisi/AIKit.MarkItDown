@@ -133,7 +133,6 @@ This installs markitdown[all], openai, azure-ai-documentintelligence, and a samp
 3. Build:
    ```bash
    dotnet build
-   `
    ```
 
 The install script verifies Python version and installs all required packages via pip.
