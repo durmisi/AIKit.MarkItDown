@@ -25,7 +25,7 @@ public static class PythonHelper
         string projectRoot = Path.GetFullPath(Path.Combine(assemblyDir, "..", "..", ".."));
         string venvPython = OperatingSystem.IsWindows() 
             ? Path.Combine(projectRoot, ".venv", "Scripts", "python.exe") 
-            : Path.Combine(projectRoot, ".venv", "bin", "python3");
+            : Path.Combine(projectRoot, ".venv", "bin", "python");
         if (File.Exists(venvPython) && ProcessHelper.IsCommandAvailable(venvPython, "--version"))
             return venvPython;
 
