@@ -76,6 +76,61 @@ public class MarkDownConverterTests
         Assert.Contains("File not found", exception.InnerException.Message);
     }
 
+    [Fact]
+    public void Constructor_WithDefaultConfig_Works()
+    {
+        _output.WriteLine("Testing constructor with default config");
+        var docIntel = new DocIntelConfig { Endpoint = "endpoint", Key = "key" };
+        var openAi = new OpenAIConfig { ApiKey = "api", Model = "model" };
+        var converter = new MarkDownConverter(docIntel, openAi);
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files/test.txt");
+        _output.WriteLine($"Converting file with default config: {filePath}");
+
+        var result = converter.Convert(filePath);
+
+        _output.WriteLine($"Conversion result length: {result.Length}");
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void Constructor_WithOverrideConfig_Works()
+    {
+        _output.WriteLine("Testing constructor with override config");
+        var docIntel = new DocIntelConfig { Endpoint = "endpoint", Key = "key" };
+        var openAi = new OpenAIConfig { ApiKey = "api", Model = "model" };
+        var converter = new MarkDownConverter(docIntel, openAi);
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files/test.txt");
+        var overrideConfig = new MarkDownConfig { KeepDataUris = true };
+        _output.WriteLine($"Converting file with override config: {filePath}");
+
+        var result = converter.Convert(filePath, overrideConfig);
+
+        _output.WriteLine($"Conversion result length: {result.Length}");
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public void Constructor_ValidatesDocIntelConfig()
+    {
+        _output.WriteLine("Testing constructor validation for DocIntelConfig");
+        var invalidDocIntel = new DocIntelConfig { Endpoint = "", Key = "key" };
+
+        var exception = Assert.Throws<ArgumentException>(() => new MarkDownConverter(invalidDocIntel, null));
+        Assert.Contains("DocIntelConfig.Endpoint", exception.Message);
+    }
+
+    [Fact]
+    public void Constructor_ValidatesOpenAIConfig()
+    {
+        _output.WriteLine("Testing constructor validation for OpenAIConfig");
+        var invalidOpenAi = new OpenAIConfig { ApiKey = "api", Model = "" };
+
+        var exception = Assert.Throws<ArgumentException>(() => new MarkDownConverter(null, invalidOpenAi));
+        Assert.Contains("OpenAIConfig.Model", exception.Message);
+    }
+
     [Theory]
     [InlineData("files/pdf-test.pdf")]
     [InlineData("files/tst-text.txt")]
@@ -544,7 +599,7 @@ public class MarkDownConverterTests
         _output.WriteLine("Testing conversion with LLM config");
         var converter = new MarkDownConverter();
         var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.jpg");
-        var config = new MarkDownConfig { LlmModel = "gpt-4o", OpenAiApiKey = "mock-key" }; // Mock key, expect graceful failure or no LLM call
+        var config = new MarkDownConfig { OpenAI = new OpenAIConfig { Model = "gpt-4o", ApiKey = "mock-key" } }; // Mock key, expect graceful failure or no LLM call
 
         try
         {
@@ -569,7 +624,7 @@ public class MarkDownConverterTests
         _output.WriteLine("Testing conversion with Azure Doc Intel config");
         var converter = new MarkDownConverter();
         var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.pdf");
-        var config = new MarkDownConfig { DocIntelEndpoint = "https://mock.endpoint", DocIntelKey = "mock-key" };
+        var config = new MarkDownConfig { DocIntel = new DocIntelConfig { Endpoint = "https://mock.endpoint", Key = "mock-key" } };
 
         try
         {

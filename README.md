@@ -133,8 +133,21 @@ using AIKit.MarkItDown;
 var converter = new MarkDownConverter();
 string markdown = converter.Convert("path/to/file.pdf");
 
-// With configuration
-var config = new MarkDownConfig { KeepDataUris = true };
+
+var docIntelConfig = new DocIntelConfig
+{
+    Endpoint = "https://your-doc-intel-endpoint.cognitiveservices.azure.com/",
+    Key = "your-doc-intel-key"
+};
+var openAiConfig = new OpenAIConfig
+{
+    ApiKey = "your-openai-api-key",
+    Model = "gpt-4o"
+};
+var converter = new MarkDownConverter(docIntelConfig, openAiConfig);
+string markdown = converter.Convert("path/to/file.pdf");
+
+var config = new MarkDownConfig { KeepDataUris = true, LlmPrompt = "Custom prompt" };
 string markdown = await converter.ConvertAsync("path/to/file.pdf", config);
 
 // Convert streams

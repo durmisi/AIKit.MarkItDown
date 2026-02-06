@@ -1,16 +1,26 @@
 namespace AIKit.MarkItDown;
 
+public class DocIntelConfig
+{
+    public string? Endpoint { get; set; }
+    public string? Key { get; set; }
+}
+
+public class OpenAIConfig
+{
+    public string? ApiKey { get; set; }
+    public string? Model { get; set; }
+}
+
 public class MarkDownConfig
 {
-    public string? DocIntelEndpoint { get; set; }
-    public string? DocIntelKey { get; set; }
+    public DocIntelConfig? DocIntel { get; set; }
+    public OpenAIConfig? OpenAI { get; set; }
 
-    public string? OpenAiApiKey { get; set; }
-    public string? LlmModel { get; set; }
     public string? LlmPrompt { get; set; }
 
-    public bool KeepDataUris { get; set; }
-    public bool EnablePlugins { get; set; }
+    public bool? KeepDataUris { get; set; }
+    public bool? EnablePlugins { get; set; }
 
     public List<string> Plugins { get; set; } = new List<string>();
 }

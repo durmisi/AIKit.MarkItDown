@@ -9,6 +9,7 @@ public class MarkDownConverter
     private const long MaxStreamSizeBytes = 100 * 1024 * 1024; // 100 MB
     private const int DefaultTimeoutMs = 30_000;
     private static readonly string WorkerExePath;
+    private readonly MarkDownConfig _defaultConfig;
 
     static MarkDownConverter()
     {
@@ -16,6 +17,38 @@ public class MarkDownConverter
         WorkerExePath = Path.Combine(assemblyDir, "AIKit.MarkItDown.Worker.exe");
         if (!File.Exists(WorkerExePath))
             throw new InvalidOperationException("Worker exe not found.");
+    }
+
+    public MarkDownConverter()
+    {
+        _defaultConfig = new MarkDownConfig();
+    }
+
+    public MarkDownConverter(
+        DocIntelConfig? docIntelConfig = null,
+        OpenAIConfig? openAiConfig = null)
+    {
+        if (docIntelConfig != null)
+        {
+            if (string.IsNullOrEmpty(docIntelConfig.Endpoint))
+                throw new ArgumentException("DocIntelConfig.Endpoint cannot be null or empty.", nameof(docIntelConfig));
+            if (string.IsNullOrEmpty(docIntelConfig.Key))
+                throw new ArgumentException("DocIntelConfig.Key cannot be null or empty.", nameof(docIntelConfig));
+        }
+
+        if (openAiConfig != null)
+        {
+            if (string.IsNullOrEmpty(openAiConfig.ApiKey))
+                throw new ArgumentException("OpenAIConfig.ApiKey cannot be null or empty.", nameof(openAiConfig));
+            if (string.IsNullOrEmpty(openAiConfig.Model))
+                throw new ArgumentException("OpenAIConfig.Model cannot be null or empty.", nameof(openAiConfig));
+        }
+
+        _defaultConfig = new MarkDownConfig
+        {
+            DocIntel = docIntelConfig,
+            OpenAI = openAiConfig
+        };
     }
 
     /* ---------------------------------------------------------
@@ -174,34 +207,48 @@ public class MarkDownConverter
      * HELPERS
      * --------------------------------------------------------- */
 
-    private static Dictionary<string, object> BuildKwargsDict(MarkDownConfig? config)
+    private Dictionary<string, object> BuildKwargsDict(MarkDownConfig? config)
     {
+        var mergedConfig = MergeConfigs(_defaultConfig, config);
         var kwargs = new Dictionary<string, object>();
 
-        if (config == null)
-            return kwargs;
+        if (!string.IsNullOrEmpty(mergedConfig.DocIntel?.Endpoint))
+            kwargs["docintel_endpoint"] = mergedConfig.DocIntel.Endpoint;
 
-        if (!string.IsNullOrEmpty(config.DocIntelEndpoint))
-            kwargs["docintel_endpoint"] = config.DocIntelEndpoint;
+        if (!string.IsNullOrEmpty(mergedConfig.DocIntel?.Key))
+            kwargs["docintel_key"] = mergedConfig.DocIntel.Key;
 
-        if (!string.IsNullOrEmpty(config.DocIntelKey))
-            kwargs["docintel_key"] = config.DocIntelKey;
+        if (!string.IsNullOrEmpty(mergedConfig.OpenAI?.ApiKey))
+            kwargs["openai_api_key"] = mergedConfig.OpenAI.ApiKey;
 
-        if (!string.IsNullOrEmpty(config.OpenAiApiKey))
-            kwargs["openai_api_key"] = config.OpenAiApiKey;
+        if (!string.IsNullOrEmpty(mergedConfig.OpenAI?.Model))
+            kwargs["llm_model"] = mergedConfig.OpenAI.Model;
 
-        if (!string.IsNullOrEmpty(config.LlmModel))
-            kwargs["llm_model"] = config.LlmModel;
+        if (!string.IsNullOrEmpty(mergedConfig.LlmPrompt))
+            kwargs["llm_prompt"] = mergedConfig.LlmPrompt;
 
-        if (!string.IsNullOrEmpty(config.LlmPrompt))
-            kwargs["llm_prompt"] = config.LlmPrompt;
-
-        if (config.KeepDataUris)
+        if (mergedConfig.KeepDataUris == true)
             kwargs["keep_data_uris"] = true;
 
-        if (config.EnablePlugins)
+        if (mergedConfig.EnablePlugins == true)
             kwargs["enable_plugins"] = true;
 
         return kwargs;
+    }
+
+    private static MarkDownConfig MergeConfigs(MarkDownConfig baseConfig, MarkDownConfig? overrideConfig)
+    {
+        if (overrideConfig == null)
+            return baseConfig;
+
+        return new MarkDownConfig
+        {
+            DocIntel = overrideConfig.DocIntel != null ? overrideConfig.DocIntel : baseConfig.DocIntel,
+            OpenAI = overrideConfig.OpenAI != null ? overrideConfig.OpenAI : baseConfig.OpenAI,
+            LlmPrompt = !string.IsNullOrEmpty(overrideConfig.LlmPrompt) ? overrideConfig.LlmPrompt : baseConfig.LlmPrompt,
+            KeepDataUris = overrideConfig.KeepDataUris ?? baseConfig.KeepDataUris,
+            EnablePlugins = overrideConfig.EnablePlugins ?? baseConfig.EnablePlugins,
+            Plugins = overrideConfig.Plugins.Count > 0 ? overrideConfig.Plugins : baseConfig.Plugins
+        };
     }
 }
