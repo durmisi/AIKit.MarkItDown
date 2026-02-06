@@ -101,9 +101,9 @@ Both architectures ensure thread safety, reliability, and performance while prov
 
 Add to your .NET project:
 
-`ash
+```bash
 dotnet add package AIKit.MarkItDown
-`
+```
 
 That's it! The library handles Python dependency detection automatically.
 
@@ -116,21 +116,25 @@ That's it! The library handles Python dependency detection automatically.
 ### From Source (Development)
 
 1. Clone and navigate:
-   `ash
-git clone https://github.com/your-repo/AIKit.MarkItDown.git
-cd AIKit.MarkItDown/src/AIKit.MarkItDown
-`
+   ```bash
+   git clone https://github.com/your-repo/AIKit.MarkItDown.git
+   cd AIKit.MarkItDown/src/AIKit.MarkItDown
+   ```
+
+````
 
 2. Install Python dependencies:
-   `powershell
+   ```powershell
 .\install.ps1
-`
-   This installs markitdown[all], openai, zure-ai-documentintelligence, and a sample plugin.
+````
+
+This installs markitdown[all], openai, azure-ai-documentintelligence, and a sample plugin.
 
 3. Build:
-   `ash
-dotnet build
-`
+   ```bash
+   dotnet build
+   `
+   ```
 
 The install script verifies Python version and installs all required packages via pip.
 
@@ -465,7 +469,7 @@ Use .NET Aspire for orchestrated development:
 
 ### Docker (Production)
 
-`ash
+```bash
 cd src/AIKit.MarkItDown.Server
 docker build -t markitdown-server .
 docker run -d -p 8000:8000 \
@@ -473,7 +477,7 @@ docker run -d -p 8000:8000 \
   -e AZURE_DOC_INTELLIGENCE_KEY="..." \
   -e OPENAI_API_KEY="..." \
   markitdown-server
-`
+```
 
 ### Docker Compose
 
