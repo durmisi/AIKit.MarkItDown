@@ -381,7 +381,7 @@ public class MarkDownConverterTests
     }
 
     [Fact]
-    public async Task ConvertAsync_WithCancellation_ThrowsTaskCanceledException()
+    public async Task ConvertAsync_WithCancellation_ThrowsOperationCanceledException()
     {
         _output.WriteLine("Testing async cancellation");
         var converter = new MarkDownConverter();
@@ -389,7 +389,7 @@ public class MarkDownConverterTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<TaskCanceledException>(() => converter.ConvertAsync(filePath, ct: cts.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => converter.ConvertAsync(filePath, ct: cts.Token));
     }
 
     [Fact]

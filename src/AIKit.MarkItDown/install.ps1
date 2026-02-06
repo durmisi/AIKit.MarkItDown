@@ -1,4 +1,5 @@
 # PowerShell script to install Python dependencies for AIKit.MarkItDown
+#https://github.com/microsoft/markitdown
 
 # Check if Python is available via 'py' launcher
 if (!(Get-Command py -ErrorAction SilentlyContinue)) {
