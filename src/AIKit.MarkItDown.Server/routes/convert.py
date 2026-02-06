@@ -6,7 +6,8 @@ import io
 import logging
 from models import MarkDownConfig
 from typing import Optional
-from utils import build_conversion_kwargs
+from utils import build_conversion_kwargs, merge_configs
+from config import default_config
 from converter import md
 from constants import MAX_FILE_SIZE
 
@@ -27,7 +28,7 @@ async def convert_file(
     Args:
         file: The file to convert.
         extension: Optional file extension override.
-        config: Optional configuration for the conversion.
+        config: Optional configuration for the conversion (overrides defaults from .env).
 
     Returns:
         Markdown content as plain text response.
@@ -51,13 +52,16 @@ async def convert_file(
         file_extension = extension or (file.filename.split('.')[-1].lower() if '.' in file.filename else None)
         logger.info(f"File extension: {file_extension}")
 
+        # Merge default config with request config
+        effective_config = merge_configs(default_config, config)
+
         # Use BytesIO for stream
         stream = io.BytesIO(content)
         kwargs = {}
         if file_extension == 'pdf':
             kwargs['check_extractable'] = False
-        if config:
-            kwargs.update(build_conversion_kwargs(config))
+        if effective_config:
+            kwargs.update(build_conversion_kwargs(effective_config))
 
         result = md.convert_stream(stream, file_extension=file_extension, **kwargs)
         logger.info(f"Conversion successful for file: {file.filename}")

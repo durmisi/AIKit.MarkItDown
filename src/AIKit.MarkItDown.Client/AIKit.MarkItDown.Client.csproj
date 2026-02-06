@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AIKit.MarkItDown\AIKit.MarkItDown.csproj" />
+  </ItemGroup>
+
 </Project>

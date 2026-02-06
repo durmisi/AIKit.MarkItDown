@@ -4,7 +4,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 import logging
 from models import  ConvertUriRequest
-from utils import build_conversion_kwargs
+from utils import build_conversion_kwargs, merge_configs
+from config import default_config
 from converter import md
 
 # Configure logging
@@ -18,7 +19,7 @@ async def convert_uri(request: ConvertUriRequest):
     """Convert a URI to Markdown format.
 
     Args:
-        request: The request containing URI and optional config.
+        request: The request containing URI and optional config (overrides defaults from .env).
 
     Returns:
         Markdown content as plain text response.
@@ -29,9 +30,12 @@ async def convert_uri(request: ConvertUriRequest):
     logger.info(f"Convert URI endpoint called with URI: {request.uri}")
 
     try:
+        # Merge default config with request config
+        effective_config = merge_configs(default_config, request.config)
+
         kwargs = {}
-        if request.config:
-            kwargs.update(build_conversion_kwargs(request.config))
+        if effective_config:
+            kwargs.update(build_conversion_kwargs(effective_config))
 
         result = md.convert(request.uri, **kwargs)
         logger.info(f"URI conversion successful for: {request.uri}")

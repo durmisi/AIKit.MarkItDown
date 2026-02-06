@@ -3,7 +3,60 @@
 [![NuGet Version](https://img.shields.io/nuget/v/AIKit.MarkItDown)](https://www.nuget.org/packages/AIKit.MarkItDown/)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue)](https://dotnet.microsoft.com/)
 
-A C# wrapper around the Python [markitdown](https://github.com/microsoft/markitdown) library, enabling seamless conversion of various file formats to Markdown. This project uses pythonnet to embed Python runtime in .NET applications, providing a hybrid C#/Python architecture for robust file processing.
+A C# wrapper around the Python `markitdown` library for converting various file formats (PDF, DOCX, etc.) to Markdown. It uses pythonnet to embed Python runtime in .NET.
+
+## Project Overview
+
+AIKit.MarkItDown is a C# wrapper around the Python `markitdown` library for converting various file formats (PDF, DOCX, etc.) to Markdown. It uses pythonnet to embed Python runtime in .NET.
+
+### Architecture
+
+- **Core Component**: `MarkDownConverter` class handles Python initialization and file conversion
+- **Python Integration**: Static constructor detects Python executable and DLL path, initializes PythonEngine
+- **Conversion Flow**: Uses Py.GIL() context to import `markitdown` and call `convert()` method
+- **Error Handling**: Wraps PythonException in C# Exception with descriptive messages
+
+### Dependencies & Setup
+
+- **NuGet**: `pythonnet` (3.0.5) for Python embedding
+- **Python**: Requires Python 3.8+ with `markitdown[all]` installed
+- **Installation**: Run `src/AIKit.MarkItDown/install.ps1` to install Python dependencies
+- **Runtime Detection**: Automatically finds Python via `python`, `python3`, or `py` commands
+
+### Build & Test Workflow
+
+- **Build**: Standard `dotnet build` in `src/` directory
+- **Test**: `dotnet test` requires Python environment; tests use xUnit with ITestOutputHelper for output
+- **Debug**: Ensure Python DLL path is correctly detected; check console for initialization errors
+- **CI/CD**: Build matrix should include Python installation step
+
+### Code Patterns
+
+- **Python Runtime Management**: Always use `using (Py.GIL())` for thread-safe Python operations
+- **Exception Translation**: Catch `PythonException` and re-throw as `Exception` with context
+- **Static Initialization**: Python setup happens once in static constructor
+- **Process Execution**: Use `Process` class with redirected output for Python command detection
+
+### Key Files
+
+- `MarkDownConverter.cs`: Main conversion logic and Python integration
+- `install.ps1`: Python dependency installation script
+- `MarkDownConverterTests.cs`: Unit tests with file conversion examples
+
+### Common Pitfalls
+
+- Python not found: Ensure `python`/`python3`/`py` is in PATH
+- DLL mismatch: Version detection may fail; verify `pythonXY.dll` exists in Python directory
+- GIL not acquired: All Python operations must be within `Py.GIL()` scope
+- Missing dependencies: Run `install.ps1` before testing or running
+
+## TODO
+
+- **Test OpenAI Integration**: The solution has not been fully tested with OpenAI client features due to lack of API credentials. Requires valid OpenAI API key for testing LLM-powered image descriptions and other AI features.
+- **Test Azure Document Intelligence**: Azure Document Intelligence integration is not tested due to missing Azure credentials. Requires Azure subscription and Document Intelligence resource for testing advanced document processing features.
+- **Publish NuGet Package**: Package the AIKit.MarkItDown library and publish to NuGet.org for public consumption.
+- **Publish Docker Image**: Build and publish the Docker image for the server component to a container registry (Docker Hub, GitHub Container Registry, etc.).
+- **CI/CD Pipeline**: Implement automated testing pipeline that includes Python environment setup and credential management for full integration testing.
 
 ## Overview
 
@@ -76,6 +129,82 @@ docker run -d -p 8000:8000 markitdown-server
    ```powershell
    cd src/AIKit.MarkItDown
    .\install.ps1
+   ```
+
+   **What the script does and what you need on your machine:**
+
+   The `install.ps1` script automates the installation of Python dependencies required for AIKit.MarkItDown. Here's what it checks and installs:
+
+   **Prerequisites on your machine:**
+   - **Python 3.8 or higher**: The script checks for Python via the `py` launcher (available with Python installations). If not found, it prompts you to install Python from https://www.python.org/.
+   - **PowerShell**: Required to run the script (standard on Windows, or PowerShell Core on other platforms).
+   - **Internet connection**: For downloading packages via pip.
+
+   **What the script installs:**
+   - `markitdown[all]`: The core Python library with all optional dependencies for supporting various file formats (PDF, DOCX, PPTX, XLSX, images, audio, etc.).
+   - `openai`: For LLM-powered features like image descriptions.
+   - `azure-ai-documentintelligence`: For Azure Document Intelligence integration.
+   - `markitdown-sample-plugin`: A sample plugin for demonstration purposes.
+
+   The script verifies Python version compatibility and exits with an error if requirements aren't met. All packages are installed using pip.
+
+   **Full install.ps1 script code:**
+
+   ```powershell
+   # PowerShell script to install Python dependencies for AIKit.MarkItDown
+   #https://github.com/microsoft/markitdown
+
+   # Check if Python is available via 'py' launcher
+   if (!(Get-Command py -ErrorAction SilentlyContinue)) {
+       Write-Host "Python is not installed or not in PATH. Please install Python 3.8+ from https://www.python.org/"
+       exit 1
+   }
+
+   # Check Python version
+   $pythonVersion = py -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+   $versionParts = $pythonVersion -split '\.'
+   $major = [int]$versionParts[0]
+   $minor = [int]$versionParts[1]
+   if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 8)) {
+       Write-Host "Python 3.8+ is required. Current version: $pythonVersion"
+       exit 1
+   }
+
+   # Install markitdown with all optional dependencies
+   # MarkItDown optional dependencies include:
+   # - [all]: All optional dependencies
+   # - [pptx]: PowerPoint files
+   # - [docx]: Word files
+   # - [xlsx]: Excel files
+   # - [xls]: Older Excel files
+   # - [pdf]: PDF files
+   # - [outlook]: Outlook messages
+   # - [az-doc-intel]: Azure Document Intelligence
+   # - [audio-transcription]: Audio transcription
+   # - [youtube-transcription]: YouTube transcription
+   #
+   # For OpenAI support, install openai separately: pip install openai
+   # For Azure Document Intelligence, use [az-doc-intel] or install azure-ai-documentintelligence
+   Write-Host "Installing markitdown[all]..."
+   py -m pip install "markitdown[all]"
+
+   # Install additional packages for LLM and Document Intelligence features
+   Write-Host "Installing OpenAI package..."
+   py -m pip install openai
+
+   Write-Host "Installing Azure Document Intelligence package..."
+   py -m pip install azure-ai-documentintelligence
+
+   # Install sample plugin for demonstration
+   Write-Host "Installing markitdown-sample-plugin..."
+   py -m pip install markitdown-sample-plugin
+
+   if ($LASTEXITCODE -eq 0) {
+       Write-Host "Installation completed successfully."
+   } else {
+       Write-Host "Installation failed."
+       exit 1
+   }
    ```
 
 3. Build the solution:

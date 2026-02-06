@@ -49,6 +49,25 @@ docker compose up --build
 
 - `PORT`: Port to run the server on (default: 8000)
 
+#### Configuration via Environment Variables
+
+The server supports loading default configuration from a `.env` file in the server directory. Create a `.env` file with the following variables:
+
+```env
+# Azure Document Intelligence Configuration
+DOCINTEL_ENDPOINT=https://your-docintel-endpoint.cognitiveservices.azure.com/
+DOCINTEL_KEY=your-docintel-key
+
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-4
+
+# Optional LLM Prompt
+LLM_PROMPT=Your custom prompt here
+```
+
+These values serve as defaults and can be overridden per request by providing a `config` object in the API call. Note that `keep_data_uris` and `enable_plugins` are enabled by default.
+
 ### Testing
 
 - Health check: `GET http://localhost:8000/health`
@@ -66,7 +85,7 @@ Convert an uploaded file to Markdown.
 - Content-Type: multipart/form-data
 - `file`: The file to convert
 - `extension` (optional): Override the file extension (e.g., "pdf", "docx")
-- `config` (optional): JSON string with MarkDownConfig
+- `config` (optional): JSON string with MarkDownConfig (overrides defaults from .env)
 
 **Response:**
 

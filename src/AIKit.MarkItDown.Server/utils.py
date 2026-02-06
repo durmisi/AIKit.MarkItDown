@@ -25,6 +25,41 @@ def validate_config(config: MarkDownConfig):
         raise ValueError("Both llm_model and llm_api_key must be provided together.")
 
 
+def merge_configs(default_config: MarkDownConfig, request_config: MarkDownConfig = None) -> MarkDownConfig:
+    """Merge request config with default config, allowing overrides.
+
+    Args:
+        default_config: The default configuration from environment.
+        request_config: The configuration from the request (optional).
+
+    Returns:
+        MarkDownConfig: Merged configuration.
+    """
+    if request_config is None:
+        return default_config
+
+    # Start with default config
+    merged = default_config.model_copy()
+
+    # Override with request config values if provided
+    if request_config.docintel_endpoint is not None:
+        merged.docintel_endpoint = request_config.docintel_endpoint
+    if request_config.docintel_key is not None:
+        merged.docintel_key = request_config.docintel_key
+    if request_config.llm_api_key is not None:
+        merged.llm_api_key = request_config.llm_api_key
+    if request_config.llm_model is not None:
+        merged.llm_model = request_config.llm_model
+    if request_config.llm_prompt is not None:
+        merged.llm_prompt = request_config.llm_prompt
+    if request_config.keep_data_uris is not None:
+        merged.keep_data_uris = request_config.keep_data_uris
+    if request_config.enable_plugins is not None:
+        merged.enable_plugins = request_config.enable_plugins
+
+    return merged
+
+
 def build_conversion_kwargs(config: MarkDownConfig) -> Dict[str, Any]:
     """Build kwargs dict from MarkDownConfig for markitdown conversion.
 
