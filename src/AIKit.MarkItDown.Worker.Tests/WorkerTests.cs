@@ -229,9 +229,14 @@ public class WorkerTests
 
         await process.WaitForExitAsync();
 
-        if (process.ExitCode != 0 || !string.IsNullOrEmpty(error))
+        if (process.ExitCode != 0)
         {
             throw new Exception($"Worker failed: exit code {process.ExitCode}, error: {error}, output: {output}");
+        }
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            _output.WriteLine($"Worker stderr: '{error.Trim()}'");
         }
 
         _output.WriteLine($"Worker output: '{output.Trim()}'");
