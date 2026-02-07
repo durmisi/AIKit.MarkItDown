@@ -34,6 +34,9 @@ jobs:
           pip install openai
           pip install azure-ai-documentintelligence
 
+      - name: Install Server dependencies
+        run: pip install -r src/AIKit.MarkItDown.Server/requirements.txt
+
       - name: Restore dependencies
         run: dotnet restore src/AIKit.MarkItDown.slnx
 
