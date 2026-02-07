@@ -30,8 +30,6 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
           pip install markitdown[all]
           pip install openai
           pip install azure-ai-documentintelligence
