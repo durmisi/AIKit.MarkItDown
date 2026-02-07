@@ -492,32 +492,17 @@ public class MarkDownConverterTests
     {
         _output.WriteLine("Testing audio conversion");
         var converter = new MarkDownConverter();
-        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.wav");
+        var filePath = Path.Combine(AppContext.BaseDirectory, "files", "testaudio_16000_test01_20s.wav");
 
-        try
-        {
-            var result = converter.Convert(filePath);
+        var result = converter.Convert(filePath);
 
-            _output.WriteLine($"Audio conversion result length: {result.Length}");
-            _output.WriteLine("```markdown");
-            _output.WriteLine(result);
-            _output.WriteLine("```");
+        _output.WriteLine($"Audio conversion result length: {result.Length}");
+        _output.WriteLine("```markdown");
+        _output.WriteLine(result);
+        _output.WriteLine("```");
 
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
-        }
-        catch (Exception ex)
-        {
-            _output.WriteLine($"Audio conversion failed: {ex.Message}");
-            _output.WriteLine($"Exception type: {ex.GetType()}");
-            if (ex.InnerException != null)
-            {
-                _output.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                _output.WriteLine($"Inner type: {ex.InnerException.GetType()}");
-            }
-            // Re-throw to fail the test and show the error
-            throw;
-        }
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
     }
 
     [Fact]

@@ -99,6 +99,7 @@ public class E2eTests : IAsyncLifetime
     [InlineData("files/test.xlsx")]
     [InlineData("files/test.zip")]
     [InlineData("files/tst-text.txt")]
+    [InlineData("files/testaudio_16000_test01_20s.wav")]
     public async Task UploadFileAndVerifyMarkdown(string fileName)
     {
         // Arrange
