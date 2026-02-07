@@ -3,16 +3,37 @@
 
 # Check if Python is available
 $pythonCmd = "python3"
-if ($IsWindows) {
-    $pythonCmd = "py"
+$isWindows = $IsWindows -or ([System.Environment]::OSVersion.Platform -eq "Win32NT")
+if ($isWindows) {
+    $pythonCmd = "python"
 }
-if (!(Get-Command $pythonCmd -ErrorAction SilentlyContinue)) {
-    if ($IsWindows) {
-        Write-Host "Python is not installed or not in PATH. Please install Python 3.10+ from https://www.python.org/"
+try {
+    $pythonVersion = & $pythonCmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null
+    if ($LASTEXITCODE -ne 0) { throw "Command failed" }
+} catch {
+    if ($isWindows) {
+        # Try to install Python using winget
+        if (Get-Command winget -ErrorAction SilentlyContinue) {
+            Write-Host "Python is not installed or not working. Installing Python 3.10+ using winget..."
+            try {
+                winget install --id Python.Python.3.10 --accept-source-agreements --accept-package-agreements
+                # Refresh environment variables
+                $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+                # Try again
+                $pythonVersion = & $pythonCmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+                if ($LASTEXITCODE -ne 0) { throw "Still failed" }
+            } catch {
+                Write-Host "Failed to install or run Python. Please install Python 3.10+ manually from https://www.python.org/"
+                exit 1
+            }
+        } else {
+            Write-Host "Python is not installed and winget is not available. Please install Python 3.10+ from https://www.python.org/"
+            exit 1
+        }
     } else {
         Write-Host "python3 is not installed or not in PATH. Please install Python 3.10+ (e.g., sudo apt install python3 python3-pip python3-dev)"
+        exit 1
     }
-    exit 1
 }
 
 # Check Python version
