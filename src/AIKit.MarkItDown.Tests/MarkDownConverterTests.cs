@@ -691,7 +691,8 @@ public class MarkDownConverterTests
         var converter = new MarkDownConverter();
         var uri = "https://invalid.domain.that.does.not.exist";
 
-        Assert.Throws<MarkItDownConversionException>(() => converter.ConvertUri(uri));
+        var ex = Assert.Throws<AggregateException>(() => converter.ConvertUri(uri));
+        Assert.IsType<MarkItDownConversionException>(ex.InnerException);
     }
 
     [Fact]
