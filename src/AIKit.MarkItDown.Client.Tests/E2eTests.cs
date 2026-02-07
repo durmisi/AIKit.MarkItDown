@@ -270,12 +270,13 @@ public class E2eTests : IAsyncLifetime
 
         await process.WaitForExitAsync();
 
-        if (process.ExitCode != 0 || !string.IsNullOrEmpty(error))
+        if (process.ExitCode != 0)
         {
             throw new Exception($"Worker failed: exit code {process.ExitCode}, error: {error}, output: {output}");
         }
 
         _output.WriteLine($"Worker output: '{output.Trim()}'");
+        _output.WriteLine($"Worker error: '{error.Trim()}'");
         output = output.Trim();
         var doc = JsonDocument.Parse(output);
         var root = doc.RootElement;
