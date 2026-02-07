@@ -1,4 +1,5 @@
-﻿using Xunit.Abstractions;
+﻿using System;
+using Xunit.Abstractions;
 using Moq;
 
 namespace AIKit.MarkItDown.Tests;
@@ -620,9 +621,11 @@ public class MarkDownConverterTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void TestConvertWithLlmConfig()
     {
+        Skip.If(Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true", "Skipping on GitHub due to missing OpenAI credentials");
+
         _output.WriteLine("Testing conversion with LLM config");
         var converter = new MarkDownConverter();
         var filePath = Path.Combine(AppContext.BaseDirectory, "files", "test.jpg");
