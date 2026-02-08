@@ -17,7 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "10.x"
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -25,7 +25,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install system dependencies
-        run: sudo apt update && sudo apt install -y ffmpeg
+        run: sudo apt update && sudo apt install -y ffmpeg exiftool tesseract-ocr poppler-utils
 
       - name: Install Python dependencies
         run: |
@@ -34,7 +34,11 @@ jobs:
           pip install azure-ai-documentintelligence
 
       - name: Install Server dependencies
-        run: pip install -r src/AIKit.MarkItDown.Server/requirements.txt
+        run: |
+          cd src/AIKit.MarkItDown.Server
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt
 
       - name: Extract version from tag
         id: version
@@ -49,8 +53,16 @@ jobs:
       - name: Build solution
         run: dotnet build src/AIKit.MarkItDown.slnx --configuration Release --no-restore
 
-      - name: Run tests
-        run: dotnet test src/AIKit.MarkItDown.slnx --configuration Release --no-build --filter "FullyQualifiedName!~E2eTests"
+      - name: Test (excluding Client E2eTests)
+        run: dotnet test src/AIKit.MarkItDown.slnx --no-restore --configuration Release --filter "FullyQualifiedName!~AIKit.MarkItDown.Client.Tests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
+
+      - name: Run E2eTests (anonymous access)
+        run: |
+          dotnet test src/AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj --no-restore --configuration Release --filter "FullyQualifiedName~AIKit.MarkItDown.Client.Tests.E2eTests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
+
+      - name: Run ApiKeyE2eTests (with API key)
+        run: |
+          dotnet test src/AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj --no-restore --configuration Release --filter "FullyQualifiedName~AIKit.MarkItDown.Client.Tests.ApiKeyE2eTests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
 
       - name: Pack NuGet packages
         run: dotnet pack src/AIKit.MarkItDown/AIKit.MarkItDown.csproj --configuration Release --no-build --output ./nupkgs --version ${{ steps.version.outputs.version }}
