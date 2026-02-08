@@ -104,6 +104,7 @@ public class ApiKeyE2eTests : IAsyncLifetime
 
         // Act
         var markdown = await _client!.ConvertAsync(filePath);
+        _output.WriteLine($"Markdown response: {markdown}");
 
         // Assert
         Assert.NotNull(markdown);
@@ -153,6 +154,7 @@ public class ApiKeyE2eTests : IAsyncLifetime
 
         // Act
         var markdown = await _client!.ConvertUriAsync(uri);
+        _output.WriteLine($"Markdown response: {markdown}");
 
         // Assert
         Assert.NotNull(markdown);

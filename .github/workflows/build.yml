@@ -55,7 +55,6 @@ jobs:
 
       - name: Run E2eTests (anonymous access)
         run: |
-          export API_KEY=""
           dotnet test src/AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj --no-restore --configuration Release --filter "FullyQualifiedName~E2eTests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
 
       - name: Run ApiKeyE2eTests (with API key)
