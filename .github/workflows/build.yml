@@ -46,8 +46,18 @@ jobs:
       - name: Build
         run: dotnet build src/AIKit.MarkItDown.slnx --no-restore --configuration Release
 
-      - name: Test
-        run: dotnet test src/AIKit.MarkItDown.slnx --no-restore --configuration Release --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
+      - name: Test (excluding Client E2eTests)
+        run: dotnet test src/AIKit.MarkItDown.slnx --no-restore --configuration Release --filter "FullyQualifiedName!~AIKit.MarkItDown.Client.Tests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
+
+      - name: Run E2eTests (anonymous access)
+        run: |
+          export API_KEY=""
+          dotnet test src/AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj --no-restore --configuration Release --filter "FullyQualifiedName~E2eTests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
+
+      - name: Run ApiKeyE2eTests (with API key)
+        run: |
+          export API_KEY=12345
+          dotnet test src/AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj --no-restore --configuration Release --filter "FullyQualifiedName~ApiKeyE2eTests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
 
       - name: Generate Coverage Report
         run: |
