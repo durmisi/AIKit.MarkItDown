@@ -38,7 +38,11 @@ jobs:
           pip install azure-ai-documentintelligence
 
       - name: Install Server dependencies
-        run: pip install -r src/AIKit.MarkItDown.Server/requirements.txt
+        run: |
+          cd src/AIKit.MarkItDown.Server
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt
 
       - name: Restore dependencies
         run: dotnet restore src/AIKit.MarkItDown.slnx
