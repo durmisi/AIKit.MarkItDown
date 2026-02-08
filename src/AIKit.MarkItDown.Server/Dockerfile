@@ -1,5 +1,8 @@
+# Use ARG for platform to avoid constant value warning
+ARG PLATFORM=linux/amd64
+
 # Build stage
-FROM --platform=linux/amd64 python:3.13-slim-bullseye AS builder
+FROM --platform=$PLATFORM python:3.13-slim-bullseye AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -17,7 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Runtime stage
-FROM --platform=linux/amd64 python:3.13-slim-bullseye
+FROM --platform=$PLATFORM python:3.13-slim-bullseye
 
 # Install runtime system dependencies
 RUN apt-get update && apt-get install -y \
@@ -35,7 +38,13 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 WORKDIR /app
 
 # Copy the application code
-COPY main.py .
+COPY main.py ./main.py
+COPY routes ./routes
+COPY constants.py ./constants.py
+COPY models.py ./models.py
+COPY utils.py ./utils.py
+COPY config.py ./config.py
+COPY converter.py ./converter.py
 
 # Expose the port
 EXPOSE 8000
