@@ -37,6 +37,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Set working directory
 WORKDIR /app
 
+# Set environment variables to disable GPU providers for onnxruntime
+ENV ORT_PROVIDERS="CPUExecutionProvider"
+
 # Copy the application code
 COPY main.py ./main.py
 COPY routes ./routes
@@ -45,6 +48,7 @@ COPY models.py ./models.py
 COPY utils.py ./utils.py
 COPY config.py ./config.py
 COPY converter.py ./converter.py
+COPY auth.py ./auth.py
 
 # Expose the port
 EXPOSE 8000
