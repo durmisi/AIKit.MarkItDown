@@ -4,6 +4,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from fastapi.responses import Response
 import io
 import logging
+import json
 from models import MarkDownConfig
 from typing import Optional
 from utils import build_conversion_kwargs, merge_configs
@@ -21,14 +22,14 @@ router = APIRouter()
 async def convert_file(
     file: UploadFile = File(...),
     extension: str = Form(None),
-    config: Optional[MarkDownConfig] = None
+    config: Optional[str] = Form(None)
 ):
     """Convert an uploaded file to Markdown format.
 
     Args:
         file: The file to convert.
         extension: Optional file extension override.
-        config: Optional configuration for the conversion (overrides defaults from .env).
+        config: Optional JSON string configuration for the conversion (overrides defaults from .env).
 
     Returns:
         Markdown content as plain text response.
@@ -52,8 +53,20 @@ async def convert_file(
         file_extension = extension or (file.filename.split('.')[-1].lower() if '.' in file.filename else None)
         logger.info(f"File extension: {file_extension}")
 
+        # Parse config if provided
+        config_obj = None
+        if config:
+            try:
+                config_dict = json.loads(config)
+                if config_dict is not None:
+                    config_obj = MarkDownConfig(**config_dict)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=422, detail="Invalid JSON in config field")
+            except Exception as e:
+                raise HTTPException(status_code=422, detail=f"Invalid config: {str(e)}")
+
         # Merge default config with request config
-        effective_config = merge_configs(default_config, config)
+        effective_config = merge_configs(default_config, config_obj)
 
         # Use BytesIO for stream
         stream = io.BytesIO(content)
