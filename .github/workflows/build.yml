@@ -50,8 +50,8 @@ jobs:
       - name: Build
         run: dotnet build src/AIKit.MarkItDown.slnx --no-restore --configuration Release
 
-      # - name: Test (excluding Client E2eTests)
-      #   run: dotnet test src/AIKit.MarkItDown.slnx --no-restore --configuration Release --filter "FullyQualifiedName!~AIKit.MarkItDown.Client.Tests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
+      - name: Test (excluding Client E2eTests)
+        run: dotnet test src/AIKit.MarkItDown.slnx --no-restore --configuration Release --filter "FullyQualifiedName!~AIKit.MarkItDown.Client.Tests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
 
       - name: Run E2eTests (anonymous access)
         run: |
