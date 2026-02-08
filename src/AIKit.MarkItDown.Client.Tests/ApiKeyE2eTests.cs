@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Runtime.InteropServices;
 using Xunit.Abstractions;
 
@@ -146,7 +144,7 @@ public class ApiKeyE2eTests : IAsyncLifetime
     public async Task ConvertUri_WithValidApiKey_ShouldSucceed()
     {
         // Arrange
-        var uri = "https://example.com";
+        var uri = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
         // Set valid API key in client
         _httpClient!.DefaultRequestHeaders.Clear();
