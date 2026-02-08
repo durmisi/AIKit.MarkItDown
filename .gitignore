@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /coveragereport
 /Samples/AIKit.Samples.BasicRAG/.env
 .venv
+src/AIKit.MarkItDown.Server/.env

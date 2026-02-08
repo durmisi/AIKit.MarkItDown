@@ -7,6 +7,9 @@ from models import MarkDownConfig
 # Load environment variables from .env file if it exists
 load_dotenv()
 
+# Optional API key for authentication
+API_KEY = os.getenv("API_KEY")
+
 def load_default_config() -> MarkDownConfig:
     """Load default configuration from environment variables.
 

@@ -54,6 +54,9 @@ docker compose up --build
 The server supports loading default configuration from a `.env` file in the server directory. Create a `.env` file with the following variables:
 
 ```env
+# Optional API Key for authentication (leave empty for anonymous access)
+API_KEY=your-api-key
+
 # Azure Document Intelligence Configuration
 DOCINTEL_ENDPOINT=https://your-docintel-endpoint.cognitiveservices.azure.com/
 DOCINTEL_KEY=your-docintel-key
@@ -67,6 +70,18 @@ LLM_PROMPT=Your custom prompt here
 ```
 
 These values serve as defaults and can be overridden per request by providing a `config` object in the API call. Note that `keep_data_uris` and `enable_plugins` are enabled by default.
+
+### Authentication
+
+The server supports optional API key authentication for the conversion endpoints (`/convert` and `/convert_uri`). If the `API_KEY` environment variable is set, clients must provide the API key in the `X-API-Key` header. If not set, the endpoints allow anonymous access.
+
+**Example with API Key:**
+
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -H "X-API-Key: your-api-key" \
+  -F "file=@document.pdf"
+```
 
 ### Testing
 

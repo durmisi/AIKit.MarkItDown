@@ -1,12 +1,13 @@
 """Route for URI conversion endpoint."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import Response
 import logging
 from models import  ConvertUriRequest
 from utils import build_conversion_kwargs, merge_configs
 from config import default_config
 from converter import md
+from auth import get_api_key
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/convert_uri", tags=["Conversion"], summary="Convert URI to Markdown")
-async def convert_uri(request: ConvertUriRequest):
+async def convert_uri(request: ConvertUriRequest, api_key: str = Depends(get_api_key)):
     """Convert a URI to Markdown format.
 
     Args:

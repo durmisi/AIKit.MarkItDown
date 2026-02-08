@@ -1,6 +1,6 @@
 """Route for file conversion endpoint."""
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Depends
 from fastapi.responses import Response
 import io
 import logging
@@ -11,6 +11,7 @@ from utils import build_conversion_kwargs, merge_configs
 from config import default_config
 from converter import md
 from constants import MAX_FILE_SIZE
+from auth import get_api_key
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -22,7 +23,8 @@ router = APIRouter()
 async def convert_file(
     file: UploadFile = File(...),
     extension: str = Form(None),
-    config: Optional[str] = Form(None)
+    config: Optional[str] = Form(None),
+    api_key: str = Depends(get_api_key)
 ):
     """Convert an uploaded file to Markdown format.
 
