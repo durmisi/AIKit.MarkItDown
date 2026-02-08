@@ -593,4 +593,3 @@ For major changes, please open an issue first to discuss.
 - **Test OpenAI Integration**: The solution has not been fully tested with OpenAI client features due to lack of API credentials. Requires valid OpenAI API key for testing LLM-powered image descriptions and other AI features.
 - **Test Azure Document Intelligence**: Azure Document Intelligence integration is not tested due to missing Azure credentials. Requires Azure subscription and Document Intelligence resource for testing advanced document processing features.
 - **Publish Docker Image**: Build and publish the Docker image for the server component to a container registry (Docker Hub, GitHub Container Registry, etc.).
-- **CI/CD Pipeline**: Implement automated testing pipeline that includes Python environment setup and credential management for full integration testing.
