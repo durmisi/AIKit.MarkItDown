@@ -31,8 +31,9 @@ A C# wrapper around the Python [markitdown](https://github.com/microsoft/markitd
 ## Prerequisites
 
 - .NET 10.0 or higher
-- Python 3.8 or higher (automatically detected from PATH)
-- For advanced features: Azure CLI (for Doc Intel), OpenAI API key (for LLM features)
+- Python 3.10 or higher (installed automatically on Windows via NuGet package install; manual setup required on Linux/macOS)
+- markitdown Python package with all dependencies (installed via setup script)
+- For advanced features: Azure Document Intelligence endpoint/key, OpenAI API key
 
 ## Installation
 
@@ -48,15 +49,42 @@ Or using Package Manager:
 Install-Package AIKit.MarkItDown
 ```
 
-### Python Dependencies
+### Automatic Setup (Windows)
 
-Run the installation script to set up Python dependencies:
+On Windows, the NuGet package includes a PowerShell script that runs automatically during installation to set up Python and required dependencies. This installs Python 3.10+ (if not present) and the markitdown package with all optional dependencies for full feature support.
+
+### Manual Setup (Linux/macOS)
+
+On Linux and macOS, automatic script execution is not supported by NuGet. After installing the package, download and run the setup script manually:
+
+1. Download `install.ps1` from the [project repository](https://github.com/your-repo/AIKit.MarkItDown/blob/main/src/AIKit.MarkItDown/install.ps1) or extract it from the NuGet package.
+2. Run the script in PowerShell:
 
 ```powershell
 .\install.ps1
 ```
 
-This installs markitdown with all optional dependencies for full feature support.
+This installs Python and markitdown with all optional dependencies.
+
+## Setup and Dependencies
+
+The setup script (`install.ps1`) performs the following actions:
+
+- Detects and installs Python 3.10+ if not present (using `winget` on Windows, or provides instructions for manual install on Linux).
+- Installs the `markitdown` package with all optional dependencies for full feature support, including:
+  - `azure-ai-documentintelligence` for Azure Document Intelligence
+  - `openai` for LLM features
+  - `speechrecognition` for audio transcription
+  - Other optional packages for comprehensive format support
+
+**Troubleshooting:**
+
+- If Python installation fails, ensure you have administrator privileges or follow the manual installation links provided by the script.
+- On Linux, you may need to install system dependencies (e.g., `sudo apt update && sudo apt install python3 python3-pip`).
+- Verify PATH includes Python after installation.
+- If script execution is blocked, check PowerShell execution policy: `Set-ExecutionPolicy RemoteSigned`.
+
+After setup, the package can detect Python automatically from PATH.
 
 ## Usage
 
@@ -182,13 +210,8 @@ MarkDownConverter.ValidateConfigRequirements(config);
 
 ## Notes
 
-- The package automatically handles Python environment setup
-- First conversion may take longer due to Python initialization
-- Ensure Python and required packages are installed via `install.ps1`
-- For Azure/OpenAI features, configure credentials securely
-- For server-based usage, check the full project repository
-
-## License
-
-[Specify license here]</content>
-<parameter name="filePath">c:\Projects\AIKit.MarkItDown\README.md
+- On Windows, Python and dependencies are set up automatically during NuGet install. On other platforms, run `install.ps1` manually.
+- The package automatically detects Python from PATH after setup.
+- First conversion may take longer due to Python initialization.
+- For Azure/OpenAI features, configure credentials securely.
+- For server-based usage, check the full project repository.

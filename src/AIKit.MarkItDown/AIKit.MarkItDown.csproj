@@ -43,6 +43,7 @@
     <Content Include="tools\AIKit.MarkItDown.Worker.dll" Pack="true" PackagePath="tools\" />
     <Content Include="tools\AIKit.MarkItDown.Worker.runtimeconfig.json" Pack="true" PackagePath="tools\" />
     <Content Include="tools\Python.Runtime.dll" Pack="true" PackagePath="tools\" />
+    <Content Include="install.ps1" Pack="true" PackagePath="tools\" />
   </ItemGroup>
 
 </Project>
