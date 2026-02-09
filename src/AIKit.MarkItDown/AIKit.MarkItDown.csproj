@@ -19,7 +19,7 @@
     <ProjectReference Include="..\AIKit.MarkItDown.Worker\AIKit.MarkItDown.Worker.csproj" Private="false" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <Target Name="CopyWorker" AfterTargets="Build">
+  <Target Name="CopyWorker" AfterTargets="ResolveProjectReferences">
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker$(ExeSuffix)" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFolder="$(OutputPath)" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFolder="$(OutputPath)" />
