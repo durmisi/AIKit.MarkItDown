@@ -36,7 +36,7 @@
 
   <Target Name="PrepareContent" BeforeTargets="Pack">
     <MakeDir Directories="content" />
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFiles="content\AIKit.MarkItDown.Worker.exe" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFiles="content\AIKit.MarkItDown.Worker.exe" Condition="'$(OS)' == 'Windows_NT'" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFiles="content\AIKit.MarkItDown.Worker.dll" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFiles="content\AIKit.MarkItDown.Worker.runtimeconfig.json" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFiles="content\Python.Runtime.dll" />
