@@ -30,7 +30,7 @@ public static class PythonHelper
             return venvPython;
 
         // Then try commands in PATH
-        foreach (var cmd in new[] { "python", "python3", "py" })
+        foreach (var cmd in new[] { "python", "python3", "py", "python3.10" })
             if (ProcessHelper.IsCommandAvailable(cmd, "--version"))
                 return ProcessHelper.Run(cmd, "-c \"import sys; print(sys.executable)\"");
 
