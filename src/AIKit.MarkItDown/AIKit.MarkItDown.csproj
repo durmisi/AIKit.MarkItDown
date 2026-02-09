@@ -11,8 +11,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>markdown conversion pdf docx</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <ExeSuffix Condition="$([MSBuild]::IsOSPlatform('Windows'))">.exe</ExeSuffix>
-    <ExeSuffix Condition="!$([MSBuild]::IsOSPlatform('Windows'))"></ExeSuffix>
+    <ExeSuffix Condition="'$(OS)' == 'Windows_NT'">.exe</ExeSuffix>
+    <ExeSuffix Condition="'$(OS)' != 'Windows_NT'"></ExeSuffix>
   </PropertyGroup>
 
   <ItemGroup>
