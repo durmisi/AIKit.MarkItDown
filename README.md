@@ -1,6 +1,7 @@
 ﻿# AIKit.MarkItDown
 
 [![NuGet Version](https://img.shields.io/nuget/v/AIKit.MarkItDown)](https://www.nuget.org/packages/AIKit.MarkItDown/)
+[![NuGet Version](https://img.shields.io/nuget/v/AIKit.MarkItDown.Client)](https://www.nuget.org/packages/AIKit.MarkItDown.Client/)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue)](https://dotnet.microsoft.com/)
 
 **Effortlessly convert files to Markdown in your .NET applications** — A powerful C# wrapper around Microsoft's markitdown library that brings advanced file conversion capabilities to .NET developers.
