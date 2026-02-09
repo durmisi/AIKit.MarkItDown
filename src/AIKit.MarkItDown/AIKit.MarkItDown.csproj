@@ -5,12 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>AIKit.MarkItDown</PackageId>
-    <Version>0.0.4</Version>
+    <Version>0.0.5</Version>
     <Authors>Admir Durmishi</Authors>
     <Description>C# wrapper for markitdown library</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>markdown conversion pdf docx</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <ExeSuffix Condition="'$(OS)' == 'Windows_NT'">.exe</ExeSuffix>
     <ExeSuffix Condition="'$(OS)' != 'Windows_NT'"></ExeSuffix>
   </PropertyGroup>
@@ -27,7 +26,11 @@
   </Target>
 
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
+    <Content Include="build\AIKit.MarkItDown.props" Pack="true" PackagePath="build/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,15 +38,15 @@
   </ItemGroup>
 
   <Target Name="PrepareContent" BeforeTargets="Pack">
-    <MakeDir Directories="content" />
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFiles="content\AIKit.MarkItDown.Worker.exe" Condition="'$(OS)' == 'Windows_NT'" />
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFiles="content\AIKit.MarkItDown.Worker.dll" />
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFiles="content\AIKit.MarkItDown.Worker.runtimeconfig.json" />
+    <MakeDir Directories="temp" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFiles="temp\AIKit.MarkItDown.Worker.exe" Condition="'$(OS)' == 'Windows_NT'" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFiles="temp\AIKit.MarkItDown.Worker.dll" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFiles="temp\AIKit.MarkItDown.Worker.runtimeconfig.json" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFiles="content\Python.Runtime.dll" />
   </Target>
 
   <ItemGroup>
-    <Content Include="content\*" Pack="true" PackagePath="content\" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="temp\*" Pack="true" PackagePath="contentFiles/any/any/" />
   </ItemGroup>
 
 </Project>

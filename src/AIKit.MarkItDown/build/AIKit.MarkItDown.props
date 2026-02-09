@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="CopyContentFiles" AfterTargets="Build">
+    <Message Text="Copying content files from $(MSBuildThisFileDirectory)../contentFiles/any/any/" Importance="high" />
+    <ItemGroup>
+      <ContentFiles Include="$(MSBuildThisFileDirectory)../contentFiles/any/any/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ContentFiles)" DestinationFolder="$(OutputPath)" />
+  </Target>
+</Project>
