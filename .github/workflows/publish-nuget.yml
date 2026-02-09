@@ -64,8 +64,11 @@ jobs:
         run: |
           dotnet test src/AIKit.MarkItDown.Client.Tests/AIKit.MarkItDown.Client.Tests.csproj --no-restore --configuration Release --filter "FullyQualifiedName~AIKit.MarkItDown.Client.Tests.ApiKeyE2eTests" --logger trx --results-directory TestResults --collect:"XPlat Code Coverage"
 
-      - name: Pack NuGet packages
+      - name: Pack AIKit.MarkItDown NuGet package
         run: dotnet pack src/AIKit.MarkItDown/AIKit.MarkItDown.csproj --configuration Release --no-build --output ./nupkgs --version ${{ steps.version.outputs.version }}
+
+      - name: Pack AIKit.MarkItDown.Client NuGet package
+        run: dotnet pack src/AIKit.MarkItDown.Client/AIKit.MarkItDown.Client.csproj --configuration Release --no-build --output ./nupkgs --version ${{ steps.version.outputs.version }}
 
       - name: NuGet login (OIDC - temp API key)
         id: login
