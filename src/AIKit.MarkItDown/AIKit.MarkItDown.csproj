@@ -42,7 +42,7 @@
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.exe" DestinationFiles="temp\AIKit.MarkItDown.Worker.exe" Condition="'$(OS)' == 'Windows_NT'" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.dll" DestinationFiles="temp\AIKit.MarkItDown.Worker.dll" />
     <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\AIKit.MarkItDown.Worker.runtimeconfig.json" DestinationFiles="temp\AIKit.MarkItDown.Worker.runtimeconfig.json" />
-    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFiles="content\Python.Runtime.dll" />
+    <Copy SourceFiles="..\AIKit.MarkItDown.Worker\bin\$(Configuration)\net10.0\Python.Runtime.dll" DestinationFiles="temp\Python.Runtime.dll" />
   </Target>
 
   <ItemGroup>
